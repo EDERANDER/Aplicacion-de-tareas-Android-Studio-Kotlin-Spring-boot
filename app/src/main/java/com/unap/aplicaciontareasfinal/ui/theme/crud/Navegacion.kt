@@ -1,18 +1,19 @@
 package com.unap.aplicaciontareasfinal.ui.theme.crud
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 sealed class Screen {
@@ -31,24 +32,19 @@ fun AppNavigation() {
 
     Scaffold(
         bottomBar = {
-            BottomAppBar {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    IconButton(onClick = { currentScreen.value = Screen.TaskList }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Home, contentDescription = "Home")
-                            Text("Home")
-                        }
-                    }
-                    IconButton(onClick = { currentScreen.value = Screen.IaLoading }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Search, contentDescription = "IA")
-                            Text("IA")
-                        }
-                    }
-                }
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    label = { Text("Home") },
+                    selected = currentScreen.value is Screen.TaskList || currentScreen.value is Screen.AddTask || currentScreen.value is Screen.EditTask,
+                    onClick = { currentScreen.value = Screen.TaskList }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.AutoAwesome, contentDescription = "IA") },
+                    label = { Text("IA") },
+                    selected = currentScreen.value is Screen.IaLoading || currentScreen.value is Screen.IaIntro || currentScreen.value is Screen.IaChat,
+                    onClick = { currentScreen.value = Screen.IaLoading }
+                )
             }
         }
     ) { paddingValues ->
