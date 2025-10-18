@@ -1,28 +1,22 @@
-# Ignorar configuraciones de IDE
+# Archivos y carpetas del IDE
 .idea/
 *.iml
 *.ipr
 *.iws
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
 
-# Ignorar archivos de sistema
-.DS_Store
-Thumbs.db
-
-# Ignorar directorios de build
+# Carpetas de compilación
 /build/
 /app/build/
 /out/
 
-# Otros
-.gradle
-/local.properties
-/captures
-.externalNativeBuild
-.cxx
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Gradle
+.gradle/
 local.properties
+
+# Otros
+/captures/
+*.log
