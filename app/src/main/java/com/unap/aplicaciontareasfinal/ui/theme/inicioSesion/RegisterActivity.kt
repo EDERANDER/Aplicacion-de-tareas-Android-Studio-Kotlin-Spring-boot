@@ -1,4 +1,4 @@
-package com.unap.aplicaciontareasfinal
+package com.unap.aplicaciontareasfinal.ui.theme.inicioSesion
 
 import android.content.Intent
 import android.os.Bundle
@@ -18,23 +18,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.LoginActivity
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            RegisterScreen(
-                onRegisterClick = {
-                    // Aquí puedes guardar los datos o validar el registro
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                },
-                onBackToLoginClick = {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                }
-            )
+            AplicacionTareasFinalTheme {
+                RegisterScreen(
+                    onRegisterClick = {
+                        // Aquí puedes guardar los datos o validar el registro
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    },
+                    onBackToLoginClick = {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                )
+            }
         }
     }
 }

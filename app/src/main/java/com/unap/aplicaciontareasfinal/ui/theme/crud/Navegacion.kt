@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.unap.aplicaciontareasfinal.ui.theme.perfil.ProfileScreen
 
 sealed class Screen {
     object TaskList : Screen()
@@ -23,6 +25,7 @@ sealed class Screen {
     object IaLoading : Screen()
     object IaIntro : Screen()
     object IaChat : Screen()
+    object Profile : Screen()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +48,12 @@ fun AppNavigation() {
                     selected = currentScreen.value is Screen.IaLoading || currentScreen.value is Screen.IaIntro || currentScreen.value is Screen.IaChat,
                     onClick = { currentScreen.value = Screen.IaLoading }
                 )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
+                    label = { Text("Perfil") },
+                    selected = currentScreen.value is Screen.Profile,
+                    onClick = { currentScreen.value = Screen.Profile }
+                )
             }
         }
     ) { paddingValues ->
@@ -59,6 +68,7 @@ fun AppNavigation() {
                 is Screen.IaLoading -> IaLoadingScreen(onTimeout = { currentScreen.value = Screen.IaIntro })
                 is Screen.IaIntro -> IaIntroScreen(onStartChat = { currentScreen.value = Screen.IaChat })
                 is Screen.IaChat -> IaChatScreen()
+                is Screen.Profile -> ProfileScreen()
             }
         }
     }
