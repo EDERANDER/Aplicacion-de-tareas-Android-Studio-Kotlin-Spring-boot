@@ -12,9 +12,45 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AplicacionTareasFinalTheme {
-                AppNavigation()
+            AppTareasTheme {
+                val navController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ) {
+                    // Pantalla de login
+                    composable("login") {
+                        LoginScreen(
+                            onLoginClick = {
+                                navController.navigate("main")
+                            },
+                            onRegisterClick = {
+                                navController.navigate("register")
+                            }
+                        )
+                    }
+                    composable("register") {
+                        RegisterScreen(navController)
+                    }
+
+                    // Pantalla principal (después de iniciar sesión)
+                    composable("main") {
+                        MainScreen()
+                    }
+                }
             }
         }
     }
 }
+
+@Composable
+fun MainScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "Bienvenido al asistente virtual universitario")
+    }
+}
+
