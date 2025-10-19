@@ -1,4 +1,4 @@
-package com.unap.aplicaciontareasfinal
+package com.unap.aplicaciontareasfinal.ui.theme.inicioSesion
 
 import android.content.Intent
 import android.os.Bundle
@@ -18,13 +18,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.unap.apptareas.ui.theme.AppTareasTheme
+import com.unap.aplicaciontareasfinal.RegisterActivity
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppTareasTheme {
+            AplicacionTareasFinalTheme {
                 LoginScreen(
                     onLoginClick = {
                         // Aquí puedes verificar credenciales antes de continuar

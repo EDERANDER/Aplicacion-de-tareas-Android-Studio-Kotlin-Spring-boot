@@ -1,4 +1,4 @@
-package com.unap.aplicaciontareasfinal
+package com.unap.aplicaciontareasfinal.ui.theme.inicioSesion
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,17 +14,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.unap.apptareas.ui.theme.AppTareasTheme
+import com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.TermsActivity;
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppTareasTheme {
+            AplicacionTareasFinalTheme {
                 WelcomeScreen(
                     onStartClick = {
                         val intent = Intent(this, TermsActivity::class.java)
@@ -73,11 +73,11 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            Image(
-                painter = painterResource(id = R.drawable.illustration_students),
-                contentDescription = "Bienvenida",
-                modifier = Modifier.size(250.dp)
-            )
+            // Image(
+            //     painter = painterResource(id = R.drawable.illustration_students),
+            //     contentDescription = "Bienvenida",
+            //     modifier = Modifier.size(250.dp)
+            // )
 
             Spacer(modifier = Modifier.height(40.dp))
 

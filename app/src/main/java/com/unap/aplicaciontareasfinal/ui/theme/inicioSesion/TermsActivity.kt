@@ -1,5 +1,6 @@
-package com.unap.aplicaciontareasfinal
+package com.unap.aplicaciontareasfinal.ui.theme.inicioSesion
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,17 +17,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.content.Intent
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
 
 class TermsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TermsScreen(onAccept = {
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-            })
+            AplicacionTareasFinalTheme {
+                TermsScreen(onAccept = {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
+                })
+            }
         }
     }
 }

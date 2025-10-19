@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AplicacionTareasFinal">
         <activity
-            android:name=".MainActivity"
+            android:name="com.unap.aplicaciontareasfinal.RootActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.AplicacionTareasFinal">
@@ -21,6 +21,36 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.MainActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AplicacionTareasFinal">
+        </activity>
+        <activity
+            android:name="com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.WelcomeActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AplicacionTareasFinal">
+        </activity>
+        <activity
+            android:name="com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.TermsActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AplicacionTareasFinal">
+        </activity>
+        <activity
+            android:name="com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.RegisterActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AplicacionTareasFinal">
+        </activity>
+        <activity
+            android:name="com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.LoginActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AplicacionTareasFinal">
         </activity>
     </application>
 
