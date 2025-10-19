@@ -7,12 +7,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,29 +68,31 @@ fun TaskScreen(onAddTaskClicked: () -> Unit, onEditTaskClicked: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn {
             items(tasks) { task ->
-                if (task == taskToDelete) {
-                    Button(
-                        onClick = { taskToDelete = null },
-                        colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.Red),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Confirmar Eliminación")
-                    }
-                } else {
-                    TaskItem(
-                        task = task,
-                        onTaskCheckedChange = { checked ->
-                            val index = tasks.indexOf(task)
-                            if (index != -1) {
-                                tasks[index] = task.copy(isCompleted = checked)
-                            }
-                        },
-                        onEditTaskClicked = onEditTaskClicked,
-                        onDeleteClicked = { taskToDelete = task }
-                    )
-                }
+                TaskItem(
+                    task = task,
+                    onTaskCheckedChange = { checked ->
+                        val index = tasks.indexOf(task)
+                        if (index != -1) {
+                            tasks[index] = task.copy(isCompleted = checked)
+                        }
+                    },
+                    onEditTaskClicked = onEditTaskClicked,
+                    onDeleteClicked = { taskToDelete = task }
+                )
             }
         }
+    }
+
+    if (taskToDelete != null) {
+        DeleteConfirmationDialog(
+            title = "Eliminar Tarea",
+            text = "¿Estás seguro de que deseas eliminar esta tarea? Esta acción es irreversible.",
+            onConfirm = {
+                tasks.remove(taskToDelete)
+                taskToDelete = null
+            },
+            onDismiss = { taskToDelete = null }
+        )
     }
 }
 
@@ -124,6 +127,33 @@ fun TaskItem(
 }
 
 data class Task(val name: String, val isCompleted: Boolean)
+
+@Composable
+fun DeleteConfirmationDialog(
+    title: String,
+    text: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title, color = Color.Red, fontWeight = FontWeight.Bold) },
+        text = { Text(text = text) },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
 
 @Preview(showBackground = true)
 @Composable
