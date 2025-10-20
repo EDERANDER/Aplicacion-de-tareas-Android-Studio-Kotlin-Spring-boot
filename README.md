@@ -11,9 +11,9 @@ Esta es una aplicación de Android para gestionar tus tareas diarias.
 
 ## 🚀 Tecnologías Utilizadas
 
-### Backend
+### Backend (En desarrollo)
 
-El backend de esta aplicación está desarrollado con **Spring Boot**, proporcionando una API RESTful robusta y escalable para la gestión de datos.
+El backend de esta aplicación está desarrollado con **Spring Boot**, proporcionando una APIs RESTful robusta y escalable para la gestión de datos.
 
 ### Frontend
 
