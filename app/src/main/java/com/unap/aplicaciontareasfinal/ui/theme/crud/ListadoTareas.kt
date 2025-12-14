@@ -164,48 +164,74 @@ fun TaskItem(
     onEditTaskClicked: () -> Unit,
     onDeleteClicked: () -> Unit
 ) {
+
+    val deleteColor = if (task.isCompleted) Color(0xFF2E7D32) else Color.Red
+    val statusTextColor = if (task.isCompleted) Color(0xFF2E7D32) else Color.Transparent
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White.copy(alpha = 0.60f),
+        color = if (task.isCompleted)
+            Color(0xFFE8F5E9).copy(alpha = 0.75f)
+        else
+            Color.White.copy(alpha = 0.60f),
         shadowElevation = 6.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
 
-            Checkbox(
-                checked = task.isCompleted,
-                onCheckedChange = onTaskCheckedChange
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = task.name,
-                modifier = Modifier.weight(1f),
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-
-            IconButton(onClick = onEditTaskClicked) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Editar",
-                    tint = MaterialTheme.colorScheme.primary
+                Checkbox(
+                    checked = task.isCompleted,
+                    onCheckedChange = onTaskCheckedChange
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = task.name,
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+
+                IconButton(onClick = onEditTaskClicked) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Editar",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(onClick = onDeleteClicked) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = deleteColor
+                    )
+                }
             }
 
-            IconButton(onClick = onDeleteClicked) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color.Red
+            // 🔹 TEXTO "TAREA ENTREGADA"
+            AnimatedVisibility(
+                visible = task.isCompleted,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut()
+            ) {
+                Text(
+                    text = "✔ Tarea entregada",
+                    color = statusTextColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 40.dp, top = 6.dp)
                 )
             }
         }

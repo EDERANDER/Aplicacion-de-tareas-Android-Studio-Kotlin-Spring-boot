@@ -63,10 +63,23 @@ fun AppNavigation() {
                     onAddTaskClicked = { currentScreen.value = Screen.AddTask },
                     onEditTaskClicked = { currentScreen.value = Screen.EditTask },
                 )
-                is Screen.AddTask -> AddTaskScreen(onBack = { currentScreen.value = Screen.TaskList })
-                is Screen.EditTask -> EditTaskScreen(onBack = { currentScreen.value = Screen.TaskList })
-                is Screen.IaLoading -> IaLoadingScreen(onTimeout = { currentScreen.value = Screen.IaIntro })
-                is Screen.IaIntro -> IaIntroScreen(onStartChat = { currentScreen.value = Screen.IaChat })
+
+                is Screen.AddTask -> AddTaskScreen(onBack = {
+                    currentScreen.value = Screen.TaskList
+                })
+
+                is Screen.EditTask -> EditTaskScreen(onBack = {
+                    currentScreen.value = Screen.TaskList
+                })
+
+                is Screen.IaLoading -> IaLoadingScreen(onTimeout = {
+                    currentScreen.value = Screen.IaIntro
+                })
+
+                is Screen.IaIntro -> IaIntroScreen(onStartChat = {
+                    currentScreen.value = Screen.IaChat
+                })
+
                 is Screen.IaChat -> IaChatScreen()
                 is Screen.Profile -> ProfileScreen()
             }
