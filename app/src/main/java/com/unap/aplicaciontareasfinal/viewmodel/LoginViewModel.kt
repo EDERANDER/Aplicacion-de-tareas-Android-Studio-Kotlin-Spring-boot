@@ -1,5 +1,6 @@
 package com.unap.aplicaciontareasfinal.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unap.aplicaciontareasfinal.data.LoginRequest
@@ -31,6 +32,7 @@ class LoginViewModel(
                     date = response.date
                 )
                 userDataStore.saveUser(user)
+                Log.d("LoginViewModel", "User saved with ID: ${user.id}")
                 _loginState.value = LoginState.Success
             } else {
                 _loginState.value = LoginState.Error("Invalid credentials")

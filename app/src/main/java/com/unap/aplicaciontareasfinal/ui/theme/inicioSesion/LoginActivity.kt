@@ -32,8 +32,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
-import com.unap.aplicaciontareasfinal.datastore.UserDataStore
-import com.unap.aplicaciontareasfinal.network.UserService
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 import com.unap.aplicaciontareasfinal.viewmodel.LoginState
 import com.unap.aplicaciontareasfinal.viewmodel.LoginViewModel
@@ -42,10 +40,8 @@ import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
 
-    private val userService by lazy { UserService() }
-    private val userDataStore by lazy { UserDataStore(this) }
     private val viewModel: LoginViewModel by viewModels {
-        ViewModelFactory(userDataStore, userService)
+        ViewModelFactory.getInstance(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

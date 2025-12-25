@@ -8,7 +8,6 @@ import androidx.activity.viewModels
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.unap.aplicaciontareasfinal.datastore.UserDataStore
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 import com.unap.aplicaciontareasfinal.ui.theme.crud.AppNavigation
 import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
@@ -16,9 +15,8 @@ import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    private val userDataStore by lazy { UserDataStore(this) }
     private val viewModel: TaskViewModel by viewModels {
-        ViewModelFactory(userDataStore)
+        ViewModelFactory.getInstance(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,4 +39,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

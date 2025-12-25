@@ -28,29 +28,47 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.*
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unap.aplicaciontareasfinal.data.Task
+import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
+import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(
     onLogoutClicked: () -> Unit,
     onAddTaskClicked: () -> Unit,
-    onEditTaskClicked: () -> Unit
+    onEditTaskClicked: () -> Unit,
+    taskViewModel: TaskViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     var searchText by remember { mutableStateOf(TextFieldValue("")) }
 
-    val tasks = remember {
-        mutableStateListOf(
-            Task("Desarrollo de plataformas", false),
-            Task("Llamar al ingeniero", false),
-            Task("Trabajos para la universidad", true),
-            Task("Completar la tarea de la semana", true),
-            Task("Tarea de Cálculo Vectorial", false),
-            Task("Concurso de programación", false)
-        )
+    val tasks by taskViewModel.tasks.collectAsState()
+    val loading by taskViewModel.loading.collectAsState()
+    val error by taskViewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+        taskViewModel.loadTasks()
+    }
+
+    // Show snackbar for errors
+    LaunchedEffect(error) {
+        error?.let {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = it,
+                    actionLabel = "Dismiss",
+                    duration = SnackbarDuration.Short
+                )
+                taskViewModel.clearError()
+            }
+        }
     }
 
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
@@ -109,19 +127,22 @@ fun TaskScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn {
-                items(tasks) { task ->
-                    TaskItem(
-                        task = task,
-                        onTaskCheckedChange = { checked ->
-                            val index = tasks.indexOf(task)
-                            if (index != -1) {
-                                tasks[index] = task.copy(isCompleted = checked)
-                            }
-                        },
-                        onEditTaskClicked = onEditTaskClicked,
-                        onDeleteClicked = { taskToDelete = task }
-                    )
+            if (loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else if (tasks.isEmpty()) {
+                Text("No hay tareas para mostrar.", modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else {
+                LazyColumn {
+                    items(tasks) { task ->
+                        TaskItem(
+                            task = task,
+                            onTaskCheckedChange = { checked ->
+                                // TODO: Implement task completion update in ViewModel
+                            },
+                            onEditTaskClicked = onEditTaskClicked,
+                            onDeleteClicked = { taskToDelete = task }
+                        )
+                    }
                 }
             }
         }
@@ -138,8 +159,7 @@ fun TaskScreen(
             title = "¿Eliminar esta tarea?",
             text = "estas seguro que quieres eliminar ?",
             onConfirm = {
-                val deletedTask = taskToDelete
-                tasks.remove(taskToDelete)
+                // TODO: Implement actual task deletion in ViewModel
                 taskToDelete = null
 
                 scope.launch {
@@ -149,9 +169,9 @@ fun TaskScreen(
                         duration = SnackbarDuration.Short
                     )
 
-                    if (result == SnackbarResult.ActionPerformed && deletedTask != null) {
-                        tasks.add(deletedTask)
-                    }
+                    // if (result == SnackbarResult.ActionPerformed && deletedTask != null) {
+                    //    tasks.add(deletedTask) // This logic needs to be in ViewModel
+                    // }
                 }
 
             },
@@ -169,15 +189,15 @@ fun TaskItem(
     onDeleteClicked: () -> Unit
 ) {
 
-    val deleteColor = if (task.isCompleted) Color(0xFF2E7D32) else Color.Red
-    val statusTextColor = if (task.isCompleted) Color(0xFF2E7D32) else Color.Transparent
+    val deleteColor = if (task.estado) Color(0xFF2E7D32) else Color.Red
+    val statusTextColor = if (task.estado) Color(0xFF2E7D32) else Color.Transparent
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
-        color = if (task.isCompleted)
+        color = if (task.estado)
             Color(0xFFE8F5E9).copy(alpha = 0.75f)
         else
             Color.White.copy(alpha = 0.60f),
@@ -194,14 +214,14 @@ fun TaskItem(
             ) {
 
                 Checkbox(
-                    checked = task.isCompleted,
+                    checked = task.estado,
                     onCheckedChange = onTaskCheckedChange
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = task.name,
+                    text = task.titulo,
                     modifier = Modifier.weight(1f),
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
@@ -226,7 +246,7 @@ fun TaskItem(
 
             // 🔹 TEXTO "TAREA ENTREGADA"
             AnimatedVisibility(
-                visible = task.isCompleted,
+                visible = task.estado,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut()
             ) {
@@ -242,7 +262,6 @@ fun TaskItem(
     }
 }
 
-data class Task(val name: String, val isCompleted: Boolean)
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -309,11 +328,15 @@ fun DeleteConfirmationDialog(
 @Preview(showBackground = true)
 @Composable
 fun PreviewTaskScreen() {
+    val context = LocalContext.current
+    val factory = ViewModelFactory.getInstance(context)
+    val viewModel: TaskViewModel = viewModel(factory = factory)
     AplicacionTareasFinalTheme {
         TaskScreen(
             onLogoutClicked = {},
             onAddTaskClicked = {},
-            onEditTaskClicked = {}
+            onEditTaskClicked = {},
+            taskViewModel = viewModel
         )
     }
 }

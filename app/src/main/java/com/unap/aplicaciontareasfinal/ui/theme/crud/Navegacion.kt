@@ -84,6 +84,7 @@ fun AppNavigation(viewModel: TaskViewModel) {
                     onLogoutClicked = { viewModel.logout() },
                     onAddTaskClicked = { currentScreen.value = Screen.AddTask },
                     onEditTaskClicked = { currentScreen.value = Screen.EditTask },
+                    taskViewModel = viewModel
                 )
 
                 is Screen.AddTask -> AddTaskScreen(onBack = {
