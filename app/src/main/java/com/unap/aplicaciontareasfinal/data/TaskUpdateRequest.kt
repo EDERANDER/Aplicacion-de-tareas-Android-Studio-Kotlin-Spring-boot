@@ -4,12 +4,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Task(
-    val id: Int,
+data class TaskUpdateRequest(
     val titulo: String,
     val descripcion: String,
-    val recordatorio: String?, // Hacerlo nullable por si acaso
+    val recordatorio: String?,
     @SerialName("estadoTarea")
-    val estado: Boolean,
-    val notificado: Boolean? // Hacerlo nullable por si acaso
+    val estado: Boolean
 )

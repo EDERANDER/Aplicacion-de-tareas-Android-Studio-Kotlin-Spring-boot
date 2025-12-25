@@ -61,6 +61,68 @@ class TaskViewModel(
         }
     }
 
+    fun updateTaskStatus(task: Task, newStatus: Boolean) {
+        viewModelScope.launch {
+            try {
+                val userId = userDataStore.getUser.first()?.id
+                if (userId == null) {
+                    _error.value = "User ID not found."
+                    return@launch
+                }
+
+                val taskUpdateRequest = com.unap.aplicaciontareasfinal.data.TaskUpdateRequest(
+                    titulo = task.titulo,
+                    descripcion = task.descripcion,
+                    recordatorio = task.recordatorio,
+                    estado = newStatus
+                )
+
+                val success = taskService.updateTask(userId, task.id, taskUpdateRequest)
+
+                if (success) {
+                    // Actualizar la lista local
+                    val updatedTasks = _tasks.value.map {
+                        if (it.id == task.id) {
+                            it.copy(estado = newStatus)
+                        } else {
+                            it
+                        }
+                    }
+                    _tasks.value = updatedTasks
+                } else {
+                    _error.value = "Failed to update task status."
+                }
+            } catch (e: Exception) {
+                _error.value = "Error updating task: ${e.message}"
+                Log.e("TaskViewModel", "Exception while updating task", e)
+            }
+        }
+    }
+
+    fun deleteTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                val userId = userDataStore.getUser.first()?.id
+                if (userId == null) {
+                    _error.value = "User ID not found."
+                    return@launch
+                }
+
+                val success = taskService.deleteTask(userId, task.id)
+
+                if (success) {
+                    // Actualizar la lista local
+                    _tasks.value = _tasks.value.filterNot { it.id == task.id }
+                } else {
+                    _error.value = "Failed to delete task."
+                }
+            } catch (e: Exception) {
+                _error.value = "Error deleting task: ${e.message}"
+                Log.e("TaskViewModel", "Exception while deleting task", e)
+            }
+        }
+    }
+
     fun clearError() {
         _error.value = null
     }

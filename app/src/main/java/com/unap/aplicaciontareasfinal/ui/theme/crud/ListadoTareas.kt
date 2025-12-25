@@ -137,7 +137,7 @@ fun TaskScreen(
                         TaskItem(
                             task = task,
                             onTaskCheckedChange = { checked ->
-                                // TODO: Implement task completion update in ViewModel
+                                taskViewModel.updateTaskStatus(task, checked)
                             },
                             onEditTaskClicked = onEditTaskClicked,
                             onDeleteClicked = { taskToDelete = task }
@@ -159,19 +159,16 @@ fun TaskScreen(
             title = "¿Eliminar esta tarea?",
             text = "estas seguro que quieres eliminar ?",
             onConfirm = {
-                // TODO: Implement actual task deletion in ViewModel
+                taskToDelete?.let { task ->
+                    taskViewModel.deleteTask(task)
+                }
                 taskToDelete = null
 
                 scope.launch {
-                    val result = snackbarHostState.showSnackbar(
+                    snackbarHostState.showSnackbar(
                         message = "Tarea eliminada",
-                        actionLabel = "Deshacer",
                         duration = SnackbarDuration.Short
                     )
-
-                    // if (result == SnackbarResult.ActionPerformed && deletedTask != null) {
-                    //    tasks.add(deletedTask) // This logic needs to be in ViewModel
-                    // }
                 }
 
             },
