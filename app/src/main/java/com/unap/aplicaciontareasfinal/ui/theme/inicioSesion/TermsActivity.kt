@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -25,16 +26,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
+import com.unap.aplicaciontareasfinal.datastore.UserDataStore
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
+import kotlinx.coroutines.launch
 
 class TermsActivity : ComponentActivity() {
+
+    private val userDataStore by lazy { UserDataStore(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val scope = rememberCoroutineScope()
             AplicacionTareasFinalTheme {
                 TermsScreen(onAccept = {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
+                    scope.launch {
+                        userDataStore.setHasSeenOnboarding(true)
+                        startActivity(Intent(this@TermsActivity, LoginActivity::class.java))
+                        finish()
+                    }
                 })
             }
         }

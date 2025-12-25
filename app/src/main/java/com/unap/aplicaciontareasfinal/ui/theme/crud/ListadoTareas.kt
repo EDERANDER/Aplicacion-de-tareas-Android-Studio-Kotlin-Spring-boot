@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,17 +30,12 @@ import androidx.compose.animation.*
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 
-
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun TaskScreen(
+    onLogoutClicked: () -> Unit,
     onAddTaskClicked: () -> Unit,
     onEditTaskClicked: () -> Unit
-
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -82,17 +78,25 @@ fun TaskScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    label = { Text("Buscar tareas") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Buscar")
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onLogoutClicked) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión")
+                }
+            }
 
-
-        OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = { Text("Buscar tareas") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -306,6 +310,10 @@ fun DeleteConfirmationDialog(
 @Composable
 fun PreviewTaskScreen() {
     AplicacionTareasFinalTheme {
-        TaskScreen(onAddTaskClicked = {}, onEditTaskClicked = {})
+        TaskScreen(
+            onLogoutClicked = {},
+            onAddTaskClicked = {},
+            onEditTaskClicked = {}
+        )
     }
 }

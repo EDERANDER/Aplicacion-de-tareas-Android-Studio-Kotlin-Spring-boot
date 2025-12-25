@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,12 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(onLogoutClicked: () -> Unit) {
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showDeleteTasksDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -145,6 +148,21 @@ fun ProfileScreen() {
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón de Cerrar Sesión
+            Button(
+                onClick = onLogoutClicked,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Cerrar Sesión", color = Color.White)
+            }
+
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
@@ -233,4 +251,12 @@ fun DeleteConfirmationDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewProfileScreen() {
+    AplicacionTareasFinalTheme {
+        ProfileScreen(onLogoutClicked = {})
+    }
 }

@@ -45,7 +45,7 @@ class LoginActivity : ComponentActivity() {
     private val userService by lazy { UserService() }
     private val userDataStore by lazy { UserDataStore(this) }
     private val viewModel: LoginViewModel by viewModels {
-        ViewModelFactory(userService, userDataStore)
+        ViewModelFactory(userDataStore, userService)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

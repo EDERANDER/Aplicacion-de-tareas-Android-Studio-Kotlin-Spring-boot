@@ -3,6 +3,7 @@ package com.unap.aplicaciontareasfinal.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -23,6 +24,7 @@ class UserDataStore(context: Context) {
         val USER_EMAIL = stringPreferencesKey("user_email")
         val USER_WHATSAPP = stringPreferencesKey("user_whatsapp")
         val USER_DATE = stringPreferencesKey("user_date")
+        val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
     }
 
     suspend fun saveUser(user: User) {
@@ -49,9 +51,23 @@ class UserDataStore(context: Context) {
         }
     }
 
+    suspend fun setHasSeenOnboarding(hasSeen: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[HAS_SEEN_ONBOARDING] = hasSeen
+        }
+    }
+
+    val hasSeenOnboarding: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[HAS_SEEN_ONBOARDING] ?: false
+    }
+
     suspend fun clearData() {
-        dataStore.edit {
-            it.clear()
+        dataStore.edit { preferences ->
+            preferences.remove(USER_ID)
+            preferences.remove(USER_NAME)
+            preferences.remove(USER_EMAIL)
+            preferences.remove(USER_WHATSAPP)
+            preferences.remove(USER_DATE)
         }
     }
 }

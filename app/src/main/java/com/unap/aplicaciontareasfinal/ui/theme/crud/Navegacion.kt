@@ -1,5 +1,7 @@
 package com.unap.aplicaciontareasfinal.ui.theme.crud
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,10 +15,17 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.LoginActivity
 import com.unap.aplicaciontareasfinal.ui.theme.perfil.ProfileScreen
+import com.unap.aplicaciontareasfinal.viewmodel.LogoutState
+import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 
 sealed class Screen {
     object TaskList : Screen()
@@ -30,8 +39,20 @@ sealed class Screen {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(viewModel: TaskViewModel) {
     val currentScreen = remember { mutableStateOf<Screen>(Screen.TaskList) }
+    val logoutState by viewModel.logoutState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(logoutState) {
+        if (logoutState is LogoutState.Success) {
+            val intent = Intent(context, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            context.startActivity(intent)
+            (context as? Activity)?.finish()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -60,6 +81,7 @@ fun AppNavigation() {
         Column(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen.value) {
                 is Screen.TaskList -> TaskScreen(
+                    onLogoutClicked = { viewModel.logout() },
                     onAddTaskClicked = { currentScreen.value = Screen.AddTask },
                     onEditTaskClicked = { currentScreen.value = Screen.EditTask },
                 )
@@ -81,7 +103,7 @@ fun AppNavigation() {
                 })
 
                 is Screen.IaChat -> IaChatScreen()
-                is Screen.Profile -> ProfileScreen()
+                is Screen.Profile -> ProfileScreen(onLogoutClicked = { viewModel.logout() })
             }
         }
     }
