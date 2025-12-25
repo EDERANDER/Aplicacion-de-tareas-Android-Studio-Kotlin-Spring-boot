@@ -2,6 +2,7 @@ package com.unap.aplicaciontareasfinal.network
 
 import android.util.Log
 import com.unap.aplicaciontareasfinal.data.LoginRequest
+import com.unap.aplicaciontareasfinal.data.RegisterRequest
 import com.unap.aplicaciontareasfinal.data.UserResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -41,6 +42,28 @@ class UserService {
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("UserService", "Error during login: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun registerUser(registerRequest: RegisterRequest): UserResponse? {
+        return try {
+            val response: HttpResponse = client.post("https://aplicacion-de-tareas-spring-boot.onrender.com/api/usuarios/crearUsuario") {
+                contentType(ContentType.Application.Json)
+                setBody(registerRequest)
+            }
+            Log.d("UserService", "Register Response status: ${response.status}")
+            val responseBody = response.bodyAsText()
+            Log.d("UserService", "Register Response body: $responseBody")
+
+            if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
+                Json { ignoreUnknownKeys = true }.decodeFromString<UserResponse>(responseBody)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("UserService", "Error during registration: ${e.message}")
             null
         }
     }
