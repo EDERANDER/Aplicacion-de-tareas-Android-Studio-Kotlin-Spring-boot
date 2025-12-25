@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,18 +32,28 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
+import com.unap.aplicaciontareasfinal.datastore.UserDataStore
+import com.unap.aplicaciontareasfinal.network.UserService
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
+import com.unap.aplicaciontareasfinal.viewmodel.LoginState
+import com.unap.aplicaciontareasfinal.viewmodel.LoginViewModel
+import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
+import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
+
+    private val userService by lazy { UserService() }
+    private val userDataStore by lazy { UserDataStore(this) }
+    private val viewModel: LoginViewModel by viewModels {
+        ViewModelFactory(userService, userDataStore)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             AplicacionTareasFinalTheme {
                 LoginScreen(
-                    onLoginClick = {
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
-                    },
+                    loginViewModel = viewModel,
                     onRegisterClick = {
                         startActivity(Intent(this, RegisterActivity::class.java))
                     }
@@ -53,10 +65,31 @@ class LoginActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
+fun LoginScreen(loginViewModel: LoginViewModel, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val loginState by loginViewModel.loginState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    LaunchedEffect(loginState) {
+        when (loginState) {
+            is LoginState.Success -> {
+                context.startActivity(Intent(context, MainActivity::class.java))
+                (context as? ComponentActivity)?.finish()
+            }
+            is LoginState.Error -> {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        (loginState as LoginState.Error).message
+                    )
+                }
+            }
+            else -> {}
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo con imagen y gradiente
@@ -66,7 +99,7 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,7 +139,7 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            
+
             Text(
                 text = "Inicia sesión en tu cuenta",
                 fontSize = 16.sp,
@@ -171,7 +204,7 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
 
             // Botón de Inicio de Sesión
             Button(
-                onClick = onLoginClick,
+                onClick = { loginViewModel.login(email, password) },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -179,12 +212,16 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
                     .height(56.dp),
                 elevation = ButtonDefaults.buttonElevation(8.dp)
             ) {
-                Text(
-                    text = "Iniciar sesión",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (loginState == LoginState.Loading) {
+                    CircularProgressIndicator(color = Color.White)
+                } else {
+                    Text(
+                        text = "Iniciar sesión",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -203,5 +240,9 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
                 )
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
