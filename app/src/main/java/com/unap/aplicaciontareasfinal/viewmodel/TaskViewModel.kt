@@ -123,6 +123,45 @@ class TaskViewModel(
         }
     }
 
+    private val _taskCreationState = MutableStateFlow<TaskCreationState>(TaskCreationState.Idle)
+    val taskCreationState: StateFlow<TaskCreationState> = _taskCreationState
+
+    fun createTask(titulo: String, descripcion: String, recordatorio: String) {
+        viewModelScope.launch {
+            _taskCreationState.value = TaskCreationState.Loading
+            try {
+                val userId = userDataStore.getUser.first()?.id
+                if (userId == null) {
+                    _taskCreationState.value = TaskCreationState.Error("User ID not found.")
+                    return@launch
+                }
+
+                val request = com.unap.aplicaciontareasfinal.data.TaskCreateRequest(
+                    titulo = titulo,
+                    descripcion = descripcion,
+                    recordatorio = recordatorio,
+                    estado = false // Las tareas nuevas siempre se crean como no completadas
+                )
+
+                val newTask = taskService.createTask(userId, request)
+
+                if (newTask != null) {
+                    _tasks.value = _tasks.value + newTask
+                    _taskCreationState.value = TaskCreationState.Success
+                } else {
+                    _taskCreationState.value = TaskCreationState.Error("Failed to create task.")
+                }
+            } catch (e: Exception) {
+                _taskCreationState.value = TaskCreationState.Error("Error creating task: ${e.message}")
+                Log.e("TaskViewModel", "Exception while creating task", e)
+            }
+        }
+    }
+
+    fun resetTaskCreationState() {
+        _taskCreationState.value = TaskCreationState.Idle
+    }
+
     fun clearError() {
         _error.value = null
     }
@@ -133,3 +172,9 @@ sealed class LogoutState {
     object Success : LogoutState()
 }
 
+sealed class TaskCreationState {
+    object Idle : TaskCreationState()
+    object Loading : TaskCreationState()
+    object Success : TaskCreationState()
+    data class Error(val message: String) : TaskCreationState()
+}

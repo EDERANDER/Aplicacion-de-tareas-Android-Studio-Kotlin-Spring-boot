@@ -191,4 +191,13 @@ fun EditTaskScreen(onBack: () -> Unit) {
         ) { DatePicker(state = state) }
     }
 }
-
+fun formatDateSafe(
+    millis: Long,
+    formatter: SimpleDateFormat
+): String {
+    return try {
+        formatter.format(Date(millis))
+    } catch (e: Exception) {
+        "Fecha inválida"
+    }
+}

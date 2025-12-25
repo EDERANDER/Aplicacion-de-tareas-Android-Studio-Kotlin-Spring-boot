@@ -25,15 +25,18 @@ class TaskService {
 
     suspend fun getTasksForUser(userId: Int): List<Task> {
         return try {
-            val response: HttpResponse = client.get("https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/listaTareas/$userId") {
-                contentType(ContentType.Application.Json)
-            }
+            val response: HttpResponse =
+                client.get("https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/listaTareas/$userId") {
+                    contentType(ContentType.Application.Json)
+                }
             Log.d("TaskService", "Response status for tasks: ${response.status}")
             val responseBody = response.bodyAsText()
             Log.d("TaskService", "Response body for tasks: $responseBody")
 
             if (response.status == HttpStatusCode.OK) {
-                Json { ignoreUnknownKeys = true; isLenient = true }.decodeFromString<List<Task>>(responseBody)
+                Json { ignoreUnknownKeys = true; isLenient = true }.decodeFromString<List<Task>>(
+                    responseBody
+                )
             } else {
                 emptyList()
             }
@@ -44,11 +47,19 @@ class TaskService {
         }
     }
 
-    suspend fun updateTask(userId: Int, taskId: Int, taskUpdateRequest: com.unap.aplicaciontareasfinal.data.TaskUpdateRequest): Boolean {
-        val url = "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/actualizarTarea/$userId/$taskId"
+    suspend fun updateTask(
+        userId: Int,
+        taskId: Int,
+        taskUpdateRequest: com.unap.aplicaciontareasfinal.data.TaskUpdateRequest
+    ): Boolean {
+        val url =
+            "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/actualizarTarea/$userId/$taskId"
         Log.d("TaskService", "Attempting to update task with URL: $url")
         try {
-            val jsonBody = Json.encodeToString(com.unap.aplicaciontareasfinal.data.TaskUpdateRequest.serializer(), taskUpdateRequest)
+            val jsonBody = Json.encodeToString(
+                com.unap.aplicaciontareasfinal.data.TaskUpdateRequest.serializer(),
+                taskUpdateRequest
+            )
             Log.d("TaskService", "Request Body: $jsonBody")
 
             val response: HttpResponse = client.put(url) {
@@ -69,7 +80,8 @@ class TaskService {
     }
 
     suspend fun deleteTask(userId: Int, taskId: Int): Boolean {
-        val url = "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/eliminarTarea/$userId/$taskId"
+        val url =
+            "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/eliminarTarea/$userId/$taskId"
         Log.d("TaskService", "Attempting to delete task with URL: $url")
         return try {
             val response: HttpResponse = client.delete(url) {
@@ -81,6 +93,31 @@ class TaskService {
             e.printStackTrace()
             Log.e("TaskService", "Error during task deletion: ${e.message}")
             false
+        }
+    }
+
+    suspend fun createTask(
+        userId: Int,
+        taskCreateRequest: com.unap.aplicaciontareasfinal.data.TaskCreateRequest
+    ): Task? {
+        val url =
+            "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/crearTarea/$userId"
+        Log.d("TaskService", "Attempting to create task with URL: $url")
+        return try {
+            val response: HttpResponse = client.post(url) {
+                contentType(ContentType.Application.Json)
+                setBody(taskCreateRequest)
+            }
+            Log.d("TaskService", "Create task response status: ${response.status}")
+            if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
+                response.body()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("TaskService", "Error during task creation: ${e.message}")
+            null
         }
     }
 }

@@ -87,9 +87,12 @@ fun AppNavigation(viewModel: TaskViewModel) {
                     taskViewModel = viewModel
                 )
 
-                is Screen.AddTask -> AddTaskScreen(onBack = {
-                    currentScreen.value = Screen.TaskList
-                })
+                is Screen.AddTask -> AddTaskScreen(
+                    taskViewModel = viewModel,
+                    onBack = {
+                        currentScreen.value = Screen.TaskList
+                    }
+                )
 
                 is Screen.EditTask -> EditTaskScreen(onBack = {
                     currentScreen.value = Screen.TaskList

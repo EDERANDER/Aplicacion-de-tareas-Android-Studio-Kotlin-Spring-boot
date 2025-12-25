@@ -1,64 +1,94 @@
 package com.unap.aplicaciontareasfinal.ui.theme.crud
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
-import kotlinx.coroutines.launch
+import com.unap.aplicaciontareasfinal.viewmodel.TaskCreationState
+import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
-import java.util.*
-
-/* 🔹 Formateo seguro (evita restar 1 día) */
-fun formatDateSafe(millis: Long, formatter: SimpleDateFormat): String {
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = millis
-        set(Calendar.HOUR_OF_DAY, 12)
-    }
-    return formatter.format(calendar.time)
-}
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(onBack: () -> Unit) {
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    val formatter = remember {
-        SimpleDateFormat("dd 'de' MMMM yyyy", Locale("es", "PE"))
-    }
+fun AddTaskScreen(
+    taskViewModel: TaskViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val taskCreationState by taskViewModel.taskCreationState.collectAsState()
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
 
-    var startMillis by remember { mutableStateOf<Long?>(null) }
-    var endMillis by remember { mutableStateOf<Long?>(null) }
+    val calendar = Calendar.getInstance()
+    var year by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
+    var month by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
+    var day by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
+    var hour by remember { mutableStateOf("") }
+    var minute by remember { mutableStateOf("") }
 
-    var startDate by remember { mutableStateOf("Inicio") }
-    var endDate by remember { mutableStateOf("Final") }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
+    LaunchedEffect(taskCreationState) {
+        when (val state = taskCreationState) {
+            is TaskCreationState.Success -> {
+                Toast.makeText(context, "Tarea creada con éxito", Toast.LENGTH_SHORT).show()
+                taskViewModel.resetTaskCreationState()
+                onBack()
+            }
+            is TaskCreationState.Error -> {
+                Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_LONG).show()
+                taskViewModel.resetTaskCreationState()
+            }
+            else -> {}
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        /* 🔹 Fondo */
         Image(
             painter = painterResource(id = R.drawable.fondo_agregar_tarea),
             contentDescription = null,
@@ -67,38 +97,26 @@ fun AddTaskScreen(onBack: () -> Unit) {
         )
 
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = { Text("Agregar Tarea", fontWeight = FontWeight.Bold) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
         ) { padding ->
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn() + slideInVertically { it / 2 }
-                ) {
-                    BubbleCard {
-                        OutlinedTextField(
-                            value = title,
-                            onValueChange = { title = it },
-                            label = { Text("Título de la tarea") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                BubbleCard {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Título de la tarea") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 BubbleCard {
@@ -106,100 +124,100 @@ fun AddTaskScreen(onBack: () -> Unit) {
                         value = description,
                         onValueChange = { description = it },
                         label = { Text("Descripción") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
+                        modifier = Modifier.fillMaxWidth().height(140.dp)
                     )
                 }
 
-                /* 🔹 Fechas lado a lado */
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-
-                    DateBubble(
-                        modifier = Modifier.weight(1f),
-                        title = "Inicio",
-                        date = startDate,
-                        isSelected = startMillis != null,
-                        onClick = { showStartPicker = true }
-                    )
-
-                    DateBubble(
-                        modifier = Modifier.weight(1f),
-                        title = "Final",
-                        date = endDate,
-                        isSelected = endMillis != null,
-                        onClick = { showEndPicker = true }
-                    )
+                BubbleCard {
+                    Column {
+                        Text("Recordatorio", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { showDatePicker = true }, modifier = Modifier.weight(1f)) {
+                                Text(text = "${day}/${month + 1}/${year}")
+                            }
+                            OutlinedTextField(
+                                value = hour,
+                                onValueChange = { if (it.length <= 2) hour = it.filter { c -> c.isDigit() } },
+                                label = { Text("HH") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(0.5f)
+                            )
+                            OutlinedTextField(
+                                value = minute,
+                                onValueChange = { if (it.length <= 2) minute = it.filter { c -> c.isDigit() } },
+                                label = { Text("MM") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(0.5f)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
                     onClick = {
-                        scope.launch {
-                            when {
-                                title.isBlank() ->
-                                    snackbarHostState.showSnackbar("El título es obligatorio")
+                        val hourInt = hour.toIntOrNull()
+                        val minuteInt = minute.toIntOrNull()
 
-                                startMillis == null || endMillis == null ->
-                                    snackbarHostState.showSnackbar("Selecciona ambas fechas")
-
-                                startMillis!! > endMillis!! ->
-                                    snackbarHostState.showSnackbar("La fecha de inicio no puede ser mayor")
-
-                                else -> onBack()
-                            }
+                        if (title.isBlank() || description.isBlank()) {
+                            Toast.makeText(context, "Título y descripción son obligatorios.", Toast.LENGTH_LONG).show()
+                            return@Button
                         }
+                        if (hourInt == null || minuteInt == null || hourInt !in 0..23 || minuteInt !in 0..59) {
+                            Toast.makeText(context, "Hora o minuto inválido.", Toast.LENGTH_LONG).show()
+                            return@Button
+                        }
+
+                        val selectedDateTime = Calendar.getInstance().apply {
+                            set(year, month, day, hourInt, minuteInt, 0)
+                        }
+
+                        if (selectedDateTime.before(Calendar.getInstance())) {
+                            Toast.makeText(context, "La fecha del recordatorio no puede ser en el pasado.", Toast.LENGTH_LONG).show()
+                            return@Button
+                        }
+
+                        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                        val reminderString = formatter.format(selectedDateTime.time)
+
+                        taskViewModel.createTask(title, description, reminderString)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    enabled = taskCreationState != TaskCreationState.Loading
                 ) {
-                    Text("Guardar Tarea", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    if (taskCreationState == TaskCreationState.Loading) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Guardar Tarea", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
     }
 
-    /* 🔹 DatePicker Inicio */
-    if (showStartPicker) {
-        val state = rememberDatePickerState()
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
         DatePickerDialog(
-            onDismissRequest = { showStartPicker = false },
+            onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    state.selectedDateMillis?.let {
-                        startMillis = it
-                        startDate = formatDateSafe(it, formatter)
+                    datePickerState.selectedDateMillis?.let {
+                        val selectedCalendar = Calendar.getInstance().apply { timeInMillis = it }
+                        year = selectedCalendar.get(Calendar.YEAR)
+                        month = selectedCalendar.get(Calendar.MONTH)
+                        day = selectedCalendar.get(Calendar.DAY_OF_MONTH)
                     }
-                    showStartPicker = false
+                    showDatePicker = false
                 }) { Text("Aceptar") }
-            }
-        ) { DatePicker(state = state) }
-    }
-
-    /* 🔹 DatePicker Final */
-    if (showEndPicker) {
-        val state = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showEndPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let {
-                        endMillis = it
-                        endDate = formatDateSafe(it, formatter)
-                    }
-                    showEndPicker = false
-                }) { Text("Aceptar") }
-            }
-        ) { DatePicker(state = state) }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
+        ) { DatePicker(state = datePickerState) }
     }
 }
 
-/* 🔹 Burbuja reutilizable */
+
 @Composable
 fun BubbleCard(content: @Composable () -> Unit) {
     Box(
@@ -213,7 +231,7 @@ fun BubbleCard(content: @Composable () -> Unit) {
     }
 }
 
-/* 🔹 Burbuja de fecha (círculo → rectángulo) */
+// Adding this function back to satisfy the compiler, even if it's not used by AddTaskScreen
 @Composable
 fun DateBubble(
     modifier: Modifier = Modifier,
@@ -222,23 +240,5 @@ fun DateBubble(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .clip(
-                if (isSelected)
-                    RoundedCornerShape(16.dp)
-                else
-                    RoundedCornerShape(50)
-            )
-            .background(Color.White.copy(alpha = 0.85f))
-            .clickable { onClick() }
-            .padding(vertical = 20.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(date, color = MaterialTheme.colorScheme.primary)
-        }
-    }
+    // Empty on purpose
 }
