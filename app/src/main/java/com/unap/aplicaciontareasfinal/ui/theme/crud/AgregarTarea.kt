@@ -46,7 +46,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
-import com.unap.aplicaciontareasfinal.viewmodel.TaskCreationState
+import com.unap.aplicaciontareasfinal.data.Task
+import com.unap.aplicaciontareasfinal.viewmodel.TaskOperationState
 import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -57,10 +58,11 @@ import java.util.TimeZone
 @Composable
 fun AddTaskScreen(
     taskViewModel: TaskViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    taskToEdit: Task? = null
 ) {
     val context = LocalContext.current
-    val taskCreationState by taskViewModel.taskCreationState.collectAsState()
+    val taskOperationState by taskViewModel.taskOperationState.collectAsState()
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -74,16 +76,40 @@ fun AddTaskScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(taskCreationState) {
-        when (val state = taskCreationState) {
-            is TaskCreationState.Success -> {
-                Toast.makeText(context, "Tarea creada con éxito", Toast.LENGTH_SHORT).show()
-                taskViewModel.resetTaskCreationState()
+    LaunchedEffect(taskToEdit) {
+        taskToEdit?.let {
+            title = it.titulo
+            description = it.descripcion
+            it.recordatorio?.let { reminder ->
+                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                try {
+                    val date = formatter.parse(reminder)
+                    date?.let {
+                        val cal = Calendar.getInstance().apply { time = it }
+                        year = cal.get(Calendar.YEAR)
+                        month = cal.get(Calendar.MONTH)
+                        day = cal.get(Calendar.DAY_OF_MONTH)
+                        hour = String.format("%02d", cal.get(Calendar.HOUR_OF_DAY))
+                        minute = String.format("%02d", cal.get(Calendar.MINUTE))
+                    }
+                } catch (e: Exception) {
+                    println("Error parsing reminder date: $e")
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(taskOperationState) {
+        when (val state = taskOperationState) {
+            is TaskOperationState.Success -> {
+                val message = if (taskToEdit == null) "Tarea creada con éxito" else "Tarea actualizada con éxito"
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                taskViewModel.resetTaskOperationState()
                 onBack()
             }
-            is TaskCreationState.Error -> {
+            is TaskOperationState.Error -> {
                 Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_LONG).show()
-                taskViewModel.resetTaskCreationState()
+                taskViewModel.resetTaskOperationState()
             }
             else -> {}
         }
@@ -101,7 +127,7 @@ fun AddTaskScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Agregar Tarea", fontWeight = FontWeight.Bold) },
+                    title = { Text(if (taskToEdit == null) "Agregar Tarea" else "Editar Tarea", fontWeight = FontWeight.Bold) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
@@ -171,33 +197,6 @@ fun AddTaskScreen(
                             return@Button
                         }
 
-                        val now = Calendar.getInstance()
-                        var isPast = false
-                        if (year < now.get(Calendar.YEAR)) {
-                            isPast = true
-                        } else if (year == now.get(Calendar.YEAR)) {
-                            if (month < now.get(Calendar.MONTH)) {
-                                isPast = true
-                            } else if (month == now.get(Calendar.MONTH)) {
-                                if (day < now.get(Calendar.DAY_OF_MONTH)) {
-                                    isPast = true
-                                } else if (day == now.get(Calendar.DAY_OF_MONTH)) {
-                                    if (hourInt < now.get(Calendar.HOUR_OF_DAY)) {
-                                        isPast = true
-                                    } else if (hourInt == now.get(Calendar.HOUR_OF_DAY)) {
-                                        if (minuteInt < now.get(Calendar.MINUTE)) {
-                                            isPast = true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (isPast) {
-                            Toast.makeText(context, "La fecha del recordatorio no puede ser en el pasado.", Toast.LENGTH_LONG).show()
-                            return@Button
-                        }
-
                         val selectedDateTime = Calendar.getInstance().apply {
                             set(year, month, day, hourInt, minuteInt, 0)
                         }
@@ -205,15 +204,29 @@ fun AddTaskScreen(
                         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                         val reminderString = formatter.format(selectedDateTime.time)
 
-                        taskViewModel.createTask(title, description, reminderString)
+                        val now = Calendar.getInstance()
+                        if (selectedDateTime.before(now)) {
+                            Toast.makeText(context, "La fecha del recordatorio no puede ser en el pasado.", Toast.LENGTH_LONG).show()
+                            return@Button
+                        }
+
+                        if (taskToEdit == null) {
+                            taskViewModel.createTask(title, description, reminderString)
+                        } else {
+                            taskViewModel.updateTask(taskToEdit.id, title, description, reminderString, taskToEdit.estado)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
-                    enabled = taskCreationState != TaskCreationState.Loading
+                    enabled = taskOperationState != TaskOperationState.Loading
                 ) {
-                    if (taskCreationState == TaskCreationState.Loading) {
+                    if (taskOperationState == TaskOperationState.Loading) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                     } else {
-                        Text("Guardar Tarea", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            if (taskToEdit == null) "Guardar Tarea" else "Actualizar Tarea",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

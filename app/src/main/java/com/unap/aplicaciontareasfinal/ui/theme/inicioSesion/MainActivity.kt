@@ -1,5 +1,6 @@
 package com.unap.aplicaciontareasfinal.ui.theme.inicioSesion
 
+import AppNavigation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
-import com.unap.aplicaciontareasfinal.ui.theme.crud.AppNavigation
 import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
 

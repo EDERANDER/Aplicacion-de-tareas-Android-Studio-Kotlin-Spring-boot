@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unap.aplicaciontareasfinal.data.Task
+import com.unap.aplicaciontareasfinal.data.TaskUpdateRequest
 import com.unap.aplicaciontareasfinal.datastore.UserDataStore
 import com.unap.aplicaciontareasfinal.network.TaskService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,7 +71,7 @@ class TaskViewModel(
                     return@launch
                 }
 
-                val taskUpdateRequest = com.unap.aplicaciontareasfinal.data.TaskUpdateRequest(
+                val taskUpdateRequest = TaskUpdateRequest(
                     titulo = task.titulo,
                     descripcion = task.descripcion,
                     recordatorio = task.recordatorio,
@@ -123,16 +124,16 @@ class TaskViewModel(
         }
     }
 
-    private val _taskCreationState = MutableStateFlow<TaskCreationState>(TaskCreationState.Idle)
-    val taskCreationState: StateFlow<TaskCreationState> = _taskCreationState
+    private val _taskOperationState = MutableStateFlow<TaskOperationState>(TaskOperationState.Idle)
+    val taskOperationState: StateFlow<TaskOperationState> = _taskOperationState
 
     fun createTask(titulo: String, descripcion: String, recordatorio: String) {
         viewModelScope.launch {
-            _taskCreationState.value = TaskCreationState.Loading
+            _taskOperationState.value = TaskOperationState.Loading
             try {
                 val userId = userDataStore.getUser.first()?.id
                 if (userId == null) {
-                    _taskCreationState.value = TaskCreationState.Error("User ID not found.")
+                    _taskOperationState.value = TaskOperationState.Error("User ID not found.")
                     return@launch
                 }
 
@@ -147,19 +148,62 @@ class TaskViewModel(
 
                 if (newTask != null) {
                     _tasks.value = _tasks.value + newTask
-                    _taskCreationState.value = TaskCreationState.Success
+                    _taskOperationState.value = TaskOperationState.Success
                 } else {
-                    _taskCreationState.value = TaskCreationState.Error("Failed to create task.")
+                    _taskOperationState.value = TaskOperationState.Error("Failed to create task.")
                 }
             } catch (e: Exception) {
-                _taskCreationState.value = TaskCreationState.Error("Error creating task: ${e.message}")
+                _taskOperationState.value = TaskOperationState.Error("Error creating task: ${e.message}")
                 Log.e("TaskViewModel", "Exception while creating task", e)
             }
         }
     }
 
-    fun resetTaskCreationState() {
-        _taskCreationState.value = TaskCreationState.Idle
+    fun updateTask(id: Int, titulo: String, descripcion: String, recordatorio: String, estado: Boolean) {
+        viewModelScope.launch {
+            _taskOperationState.value = TaskOperationState.Loading
+            try {
+                val userId = userDataStore.getUser.first()?.id
+                if (userId == null) {
+                    _taskOperationState.value = TaskOperationState.Error("User ID not found.")
+                    return@launch
+                }
+
+                val request = TaskUpdateRequest(
+                    titulo = titulo,
+                    descripcion = descripcion,
+                    recordatorio = recordatorio,
+                    estado = estado
+                )
+
+                val success = taskService.updateTask(userId, id, request)
+
+                if (success) {
+                    _tasks.value = _tasks.value.map {
+                        if (it.id == id) {
+                            it.copy(
+                                titulo = titulo,
+                                descripcion = descripcion,
+                                recordatorio = recordatorio,
+                                estado = estado
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                    _taskOperationState.value = TaskOperationState.Success
+                } else {
+                    _taskOperationState.value = TaskOperationState.Error("Failed to update task.")
+                }
+            } catch (e: Exception) {
+                _taskOperationState.value = TaskOperationState.Error("Error updating task: ${e.message}")
+                Log.e("TaskViewModel", "Exception while updating task", e)
+            }
+        }
+    }
+
+    fun resetTaskOperationState() {
+        _taskOperationState.value = TaskOperationState.Idle
     }
 
     fun clearError() {
@@ -172,9 +216,9 @@ sealed class LogoutState {
     object Success : LogoutState()
 }
 
-sealed class TaskCreationState {
-    object Idle : TaskCreationState()
-    object Loading : TaskCreationState()
-    object Success : TaskCreationState()
-    data class Error(val message: String) : TaskCreationState()
+sealed class TaskOperationState {
+    object Idle : TaskOperationState()
+    object Loading : TaskOperationState()
+    object Success : TaskOperationState()
+    data class Error(val message: String) : TaskOperationState()
 }

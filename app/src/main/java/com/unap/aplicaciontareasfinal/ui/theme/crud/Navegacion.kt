@@ -1,6 +1,8 @@
-package com.unap.aplicaciontareasfinal.ui.theme.crud
-
-import TaskScreen
+import com.unap.aplicaciontareasfinal.data.Task
+import com.unap.aplicaciontareasfinal.ui.theme.crud.AddTaskScreen
+import com.unap.aplicaciontareasfinal.ui.theme.crud.IaChatScreen
+import com.unap.aplicaciontareasfinal.ui.theme.crud.IaIntroScreen
+import com.unap.aplicaciontareasfinal.ui.theme.crud.IaLoadingScreen
 import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.layout.Column
@@ -31,7 +33,7 @@ import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 sealed class Screen {
     object TaskList : Screen()
     object AddTask : Screen()
-    object EditTask : Screen()
+    data class EditTask(val task: Task) : Screen()
     object IaLoading : Screen()
     object IaIntro : Screen()
     object IaChat : Screen()
@@ -84,7 +86,7 @@ fun AppNavigation(viewModel: TaskViewModel) {
                 is Screen.TaskList -> TaskScreen(
                     onLogoutClicked = { viewModel.logout() },
                     onAddTaskClicked = { currentScreen.value = Screen.AddTask },
-                    onEditTaskClicked = { currentScreen.value = Screen.EditTask },
+                    onEditTaskClicked = { task -> currentScreen.value = Screen.EditTask(task) },
                     taskViewModel = viewModel
                 )
 
@@ -95,9 +97,14 @@ fun AppNavigation(viewModel: TaskViewModel) {
                     }
                 )
 
-                is Screen.EditTask -> EditTaskScreen(onBack = {
-                    currentScreen.value = Screen.TaskList
-                })
+                is Screen.EditTask -> {
+                    val taskToEdit = (currentScreen.value as Screen.EditTask).task
+                    AddTaskScreen(
+                        taskViewModel = viewModel,
+                        onBack = { currentScreen.value = Screen.TaskList },
+                        taskToEdit = taskToEdit
+                    )
+                }
 
                 is Screen.IaLoading -> IaLoadingScreen(onTimeout = {
                     currentScreen.value = Screen.IaIntro

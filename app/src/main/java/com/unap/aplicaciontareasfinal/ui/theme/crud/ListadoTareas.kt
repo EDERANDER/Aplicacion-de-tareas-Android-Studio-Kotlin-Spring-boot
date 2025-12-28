@@ -44,7 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 fun TaskScreen(
     onLogoutClicked: () -> Unit,
     onAddTaskClicked: () -> Unit,
-    onEditTaskClicked: () -> Unit,
+    onEditTaskClicked: (Task) -> Unit,
     taskViewModel: TaskViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -187,7 +187,7 @@ fun TaskScreen(
 fun TaskItem(
     task: Task,
     onTaskCheckedChange: (Boolean) -> Unit,
-    onEditTaskClicked: () -> Unit,
+    onEditTaskClicked: (Task) -> Unit,
     onDeleteClicked: () -> Unit,
     onItemClicked: () -> Unit
 ) {
@@ -228,7 +228,7 @@ fun TaskItem(
                     color = Color.Black
                 )
 
-                IconButton(onClick = onEditTaskClicked) {
+                IconButton(onClick = { onEditTaskClicked(task) }) {
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Editar",
