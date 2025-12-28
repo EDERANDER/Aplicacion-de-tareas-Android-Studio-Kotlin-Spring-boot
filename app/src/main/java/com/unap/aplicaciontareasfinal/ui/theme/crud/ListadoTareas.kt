@@ -1,15 +1,20 @@
-package com.unap.aplicaciontareasfinal.ui.theme.crud
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,20 +26,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.unap.aplicaciontareasfinal.R
-import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.*
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unap.aplicaciontareasfinal.R
 import com.unap.aplicaciontareasfinal.data.Task
+import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
-
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.*
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +55,9 @@ fun TaskScreen(
     val tasks by taskViewModel.tasks.collectAsState()
     val loading by taskViewModel.loading.collectAsState()
     val error by taskViewModel.error.collectAsState()
+
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
+    var taskToShowDetails by remember { mutableStateOf<Task?>(null) }
 
     LaunchedEffect(Unit) {
         taskViewModel.loadTasks()
@@ -71,8 +77,6 @@ fun TaskScreen(
         }
     }
 
-    var taskToDelete by remember { mutableStateOf<Task?>(null) }
-
     // 🔹 CONTENEDOR CON FONDO
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -87,7 +91,6 @@ fun TaskScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-
 
         // 🔹 CONTENIDO
         Column(
@@ -115,7 +118,6 @@ fun TaskScreen(
                 }
             }
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
@@ -140,7 +142,8 @@ fun TaskScreen(
                                 taskViewModel.updateTaskStatus(task, checked)
                             },
                             onEditTaskClicked = onEditTaskClicked,
-                            onDeleteClicked = { taskToDelete = task }
+                            onDeleteClicked = { taskToDelete = task },
+                            onItemClicked = { taskToShowDetails = task }
                         )
                     }
                 }
@@ -170,12 +173,14 @@ fun TaskScreen(
                         duration = SnackbarDuration.Short
                     )
                 }
-
             },
             onDismiss = { taskToDelete = null }
         )
     }
 
+    taskToShowDetails?.let { task ->
+        TaskDetailsDialog(task = task, onDismiss = { taskToShowDetails = null })
+    }
 }
 
 @Composable
@@ -183,16 +188,17 @@ fun TaskItem(
     task: Task,
     onTaskCheckedChange: (Boolean) -> Unit,
     onEditTaskClicked: () -> Unit,
-    onDeleteClicked: () -> Unit
+    onDeleteClicked: () -> Unit,
+    onItemClicked: () -> Unit
 ) {
-
     val deleteColor = if (task.estado) Color(0xFF2E7D32) else Color.Red
     val statusTextColor = if (task.estado) Color(0xFF2E7D32) else Color.Transparent
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onItemClicked() },
         shape = RoundedCornerShape(24.dp),
         color = if (task.estado)
             Color(0xFFE8F5E9).copy(alpha = 0.75f)
@@ -205,11 +211,9 @@ fun TaskItem(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Checkbox(
                     checked = task.estado,
                     onCheckedChange = onTaskCheckedChange
@@ -259,6 +263,129 @@ fun TaskItem(
     }
 }
 
+@Composable
+fun TaskDetailsDialog(
+    task: Task,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.padding(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = task.titulo,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Divider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Descripción
+                Text(
+                    text = "Descripción",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = task.descripcion.ifEmpty { "Sin descripción." },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                )
+
+                // Recordatorio
+                Text(
+                    text = "Recordatorio",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = task.recordatorio ?: "No hay recordatorio.", // Display reminder or default text
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                )
+
+                // Estado
+                Text(
+                    text = "Estado",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    val statusText = if (task.estado) "Completada" else "Pendiente"
+                    val statusColor = if (task.estado) Color(0xFF2E7D32) else Color.Red
+                    val statusIcon = if (task.estado) Icons.Default.CheckCircle else Icons.Default.Info
+
+                    Icon(
+                        imageVector = statusIcon,
+                        contentDescription = "Estado",
+                        tint = statusColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = statusText,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Notificado
+                Text(
+                    text = "Notificación",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    val notifiedText = if (task.notificado == true) "Notificado" else "No notificado"
+                    val notifiedColor = if (task.notificado == true) Color(0xFF2E7D32) else Color.Gray
+                    val notifiedIcon = if (task.notificado == true) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff
+
+                    Icon(
+                        imageVector = notifiedIcon,
+                        contentDescription = "Notificación",
+                        tint = notifiedColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = notifiedText,
+                        fontWeight = FontWeight.Bold,
+                        color = notifiedColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Cerrar")
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable

@@ -51,6 +51,7 @@ import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,13 +171,35 @@ fun AddTaskScreen(
                             return@Button
                         }
 
-                        val selectedDateTime = Calendar.getInstance().apply {
-                            set(year, month, day, hourInt, minuteInt, 0)
+                        val now = Calendar.getInstance()
+                        var isPast = false
+                        if (year < now.get(Calendar.YEAR)) {
+                            isPast = true
+                        } else if (year == now.get(Calendar.YEAR)) {
+                            if (month < now.get(Calendar.MONTH)) {
+                                isPast = true
+                            } else if (month == now.get(Calendar.MONTH)) {
+                                if (day < now.get(Calendar.DAY_OF_MONTH)) {
+                                    isPast = true
+                                } else if (day == now.get(Calendar.DAY_OF_MONTH)) {
+                                    if (hourInt < now.get(Calendar.HOUR_OF_DAY)) {
+                                        isPast = true
+                                    } else if (hourInt == now.get(Calendar.HOUR_OF_DAY)) {
+                                        if (minuteInt < now.get(Calendar.MINUTE)) {
+                                            isPast = true
+                                        }
+                                    }
+                                }
+                            }
                         }
 
-                        if (selectedDateTime.before(Calendar.getInstance())) {
+                        if (isPast) {
                             Toast.makeText(context, "La fecha del recordatorio no puede ser en el pasado.", Toast.LENGTH_LONG).show()
                             return@Button
+                        }
+
+                        val selectedDateTime = Calendar.getInstance().apply {
+                            set(year, month, day, hourInt, minuteInt, 0)
                         }
 
                         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -204,7 +227,7 @@ fun AddTaskScreen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        val selectedCalendar = Calendar.getInstance().apply { timeInMillis = it }
+                        val selectedCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = it }
                         year = selectedCalendar.get(Calendar.YEAR)
                         month = selectedCalendar.get(Calendar.MONTH)
                         day = selectedCalendar.get(Calendar.DAY_OF_MONTH)
