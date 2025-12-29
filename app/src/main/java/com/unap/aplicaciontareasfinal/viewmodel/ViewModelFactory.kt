@@ -7,10 +7,13 @@ import com.unap.aplicaciontareasfinal.datastore.UserDataStore
 import com.unap.aplicaciontareasfinal.network.TaskService
 import com.unap.aplicaciontareasfinal.network.UserService
 
+import com.unap.aplicaciontareasfinal.network.IaService
+
 class ViewModelFactory(
     private val userDataStore: UserDataStore,
     private val userService: UserService,
-    private val taskService: TaskService
+    private val taskService: TaskService,
+    private val iaService: IaService
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
@@ -20,6 +23,10 @@ class ViewModelFactory(
         if (modelClass.isAssignableFrom(TaskViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return TaskViewModel(userDataStore, taskService) as T
+        }
+        if (modelClass.isAssignableFrom(IaViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return IaViewModel(userDataStore, iaService) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
@@ -33,7 +40,8 @@ class ViewModelFactory(
                 val instance = ViewModelFactory(
                     userDataStore = UserDataStore(context.applicationContext),
                     userService = UserService(),
-                    taskService = TaskService()
+                    taskService = TaskService(),
+                    iaService = IaService()
                 )
                 INSTANCE = instance
                 instance
