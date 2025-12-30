@@ -28,6 +28,10 @@ class ViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return IaViewModel(userDataStore, iaService) as T
         }
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfileViewModel(userDataStore, userService) as T
+        }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 

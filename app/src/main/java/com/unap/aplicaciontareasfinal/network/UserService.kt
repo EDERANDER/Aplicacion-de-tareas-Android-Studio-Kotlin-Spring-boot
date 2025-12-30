@@ -67,4 +67,18 @@ class UserService {
             null
         }
     }
+
+    suspend fun deleteUser(userId: Int): Boolean {
+        return try {
+            val response: HttpResponse = client.delete("https://aplicacion-de-tareas-spring-boot.onrender.com/api/usuarios/eliminarUsuario/$userId") {
+                contentType(ContentType.Application.Json)
+            }
+            Log.d("UserService", "Delete Response status: ${response.status}")
+            response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("UserService", "Error during user deletion: ${e.message}")
+            false
+        }
+    }
 }

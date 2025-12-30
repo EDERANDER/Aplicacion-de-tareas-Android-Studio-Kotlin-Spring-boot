@@ -10,7 +10,10 @@ import com.unap.aplicaciontareasfinal.network.TaskService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.unap.aplicaciontareasfinal.data.User // Importar la clase User
 
 class TaskViewModel(
     private val userDataStore: UserDataStore,
@@ -28,6 +31,12 @@ class TaskViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+    val user: StateFlow<User?> = userDataStore.getUser.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     fun logout() {
         viewModelScope.launch {

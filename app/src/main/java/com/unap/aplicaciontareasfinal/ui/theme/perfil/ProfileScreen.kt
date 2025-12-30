@@ -23,9 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
+import com.unap.aplicaciontareasfinal.viewmodel.ProfileViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.unap.aplicaciontareasfinal.data.User // Importar la clase User
+import com.unap.aplicaciontareasfinal.datastore.UserDataStore
+import com.unap.aplicaciontareasfinal.network.UserService
 
 @Composable
-fun ProfileScreen(onLogoutClicked: () -> Unit) {
+fun ProfileScreen(
+    user: User?, // Nuevo parametro para recibir el usuario
+    onLogoutClicked: () -> Unit,
+    profileViewModel: ProfileViewModel
+) {
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showDeleteTasksDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -84,13 +93,23 @@ fun ProfileScreen(onLogoutClicked: () -> Unit) {
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "Juan Pérez",
+                            text = user?.nombre ?: "Usuario",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = "Usuario desde 2021",
+                            text = user?.email ?: "Correo no disponible",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "WhatsApp: ${user?.numeroWhatsapp ?: "No disponible"}",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "Miembro desde: ${user?.date ?: "Fecha no disponible"}",
                             fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.7f)
                         )
@@ -206,7 +225,7 @@ fun ProfileScreen(onLogoutClicked: () -> Unit) {
             title = "Eliminar Cuenta",
             text = "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción es irreversible y perderás todos los datos relacionados.",
             onConfirm = {
-                // Lógica para eliminar cuenta
+                profileViewModel.deleteCurrentUser()
                 showDeleteAccountDialog = false
             },
             onDismiss = { showDeleteAccountDialog = false }
@@ -251,12 +270,4 @@ fun DeleteConfirmationDialog(
             }
         }
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewProfileScreen() {
-    AplicacionTareasFinalTheme {
-        ProfileScreen(onLogoutClicked = {})
-    }
 }

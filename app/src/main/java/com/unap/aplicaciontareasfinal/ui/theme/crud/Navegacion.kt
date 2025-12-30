@@ -23,10 +23,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unap.aplicaciontareasfinal.ui.theme.inicioSesion.LoginActivity
 import com.unap.aplicaciontareasfinal.ui.theme.perfil.ProfileScreen
 import com.unap.aplicaciontareasfinal.viewmodel.LogoutState
+import com.unap.aplicaciontareasfinal.viewmodel.ProfileViewModel
 import com.unap.aplicaciontareasfinal.viewmodel.TaskViewModel
+import com.unap.aplicaciontareasfinal.viewmodel.UserDeletionState
+import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
 
 sealed class Screen {
     object TaskList : Screen()
@@ -38,13 +42,27 @@ sealed class Screen {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation(viewModel: TaskViewModel) {
+fun AppNavigation(taskViewModel: TaskViewModel) {
     val currentScreen = remember { mutableStateOf<Screen>(Screen.TaskList) }
-    val logoutState by viewModel.logoutState.collectAsState()
+    val logoutState by taskViewModel.logoutState.collectAsState()
+    val currentUser by taskViewModel.user.collectAsState() // Obtener el usuario
     val context = LocalContext.current
+    val factory = ViewModelFactory.getInstance(context)
+    val profileViewModel: ProfileViewModel = viewModel(factory = factory)
+    val userDeletionState by profileViewModel.userDeletionState.collectAsState()
 
     LaunchedEffect(logoutState) {
         if (logoutState is LogoutState.Success) {
+            val intent = Intent(context, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            context.startActivity(intent)
+            (context as? Activity)?.finish()
+        }
+    }
+
+    LaunchedEffect(userDeletionState) {
+        if (userDeletionState is UserDeletionState.Success) {
             val intent = Intent(context, LoginActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
@@ -80,14 +98,14 @@ fun AppNavigation(viewModel: TaskViewModel) {
         Column(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen.value) {
                 is Screen.TaskList -> TaskScreen(
-                    onLogoutClicked = { viewModel.logout() },
+                    onLogoutClicked = { taskViewModel.logout() },
                     onAddTaskClicked = { currentScreen.value = Screen.AddTask },
                     onEditTaskClicked = { task -> currentScreen.value = Screen.EditTask(task) },
-                    taskViewModel = viewModel
+                    taskViewModel = taskViewModel
                 )
 
                 is Screen.AddTask -> AddTaskScreen(
-                    taskViewModel = viewModel,
+                    taskViewModel = taskViewModel,
                     onBack = {
                         currentScreen.value = Screen.TaskList
                     }
@@ -96,13 +114,17 @@ fun AppNavigation(viewModel: TaskViewModel) {
                 is Screen.EditTask -> {
                     val taskToEdit = (currentScreen.value as Screen.EditTask).task
                     AddTaskScreen(
-                        taskViewModel = viewModel,
+                        taskViewModel = taskViewModel,
                         onBack = { currentScreen.value = Screen.TaskList },
                         taskToEdit = taskToEdit
                     )
                 }
                 is Screen.IaChat -> IaChatScreen()
-                is Screen.Profile -> ProfileScreen(onLogoutClicked = { viewModel.logout() })
+                is Screen.Profile -> ProfileScreen(
+                    user = currentUser,
+                    onLogoutClicked = { taskViewModel.logout() },
+                    profileViewModel = profileViewModel
+                )
             }
         }
     }
