@@ -237,7 +237,7 @@ fun ProfileScreen(
             title = "Eliminar Tareas",
             text = "¿Estás seguro de que deseas eliminar tus tareas? Esta acción es irreversible y perderás todos los datos relacionados.",
             onConfirm = {
-                // Lógica para eliminar tareas
+                profileViewModel.deleteAllUserTasks() // Llamada a la función del ViewModel
                 showDeleteTasksDialog = false
             },
             onDismiss = { showDeleteTasksDialog = false }

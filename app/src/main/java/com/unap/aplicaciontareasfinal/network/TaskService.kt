@@ -120,4 +120,20 @@ class TaskService {
             null
         }
     }
+
+    suspend fun deleteAllTasks(userId: Int): Boolean {
+        val url = "https://aplicacion-de-tareas-spring-boot.onrender.com/api/tareas/eliminarTodo/$userId"
+        Log.d("TaskService", "Attempting to delete all tasks for user with URL: $url")
+        return try {
+            val response: HttpResponse = client.delete(url) {
+                contentType(ContentType.Application.Json)
+            }
+            Log.d("TaskService", "Delete all tasks response status: ${response.status}")
+            response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NoContent
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("TaskService", "Error during deleting all tasks: ${e.message}")
+            false
+        }
+    }
 }

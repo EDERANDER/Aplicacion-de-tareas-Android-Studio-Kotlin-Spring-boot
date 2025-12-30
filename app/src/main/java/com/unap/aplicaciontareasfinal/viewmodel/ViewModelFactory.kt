@@ -30,7 +30,7 @@ class ViewModelFactory(
         }
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ProfileViewModel(userDataStore, userService) as T
+            return ProfileViewModel(userDataStore, userService, taskService) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
