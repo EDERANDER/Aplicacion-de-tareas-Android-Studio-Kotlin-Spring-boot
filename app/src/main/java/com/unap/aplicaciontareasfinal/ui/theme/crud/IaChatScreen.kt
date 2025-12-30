@@ -40,7 +40,7 @@ fun IaChatScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    var message by remember { mutableStateOf("") }
+    val prompt by viewModel.prompt.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -113,8 +113,8 @@ fun IaChatScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
-                        value = message,
-                        onValueChange = { message = it },
+                        value = prompt,
+                        onValueChange = { viewModel.updatePrompt(it) },
                         placeholder = { Text("Escribe tu mensaje...") },
                         modifier = Modifier.weight(1f),
                         maxLines = 3
@@ -122,14 +122,13 @@ fun IaChatScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = {
-                            if (message.isNotBlank() && !isLoading) {
+                            if (prompt.isNotBlank() && !isLoading) {
                                 scope.launch {
-                                    viewModel.sendMessage(message)
-                                    message = ""
+                                    viewModel.sendMessage()
                                 }
                             }
                         },
-                        enabled = message.isNotBlank() && !isLoading
+                        enabled = prompt.isNotBlank() && !isLoading
                     ) {
                         Icon(Icons.Default.Send, contentDescription = "Enviar")
                     }
