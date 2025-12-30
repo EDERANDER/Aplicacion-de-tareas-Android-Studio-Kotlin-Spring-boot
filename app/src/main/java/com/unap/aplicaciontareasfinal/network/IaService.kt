@@ -1,7 +1,9 @@
 package com.unap.aplicaciontareasfinal.network
 
 import com.unap.aplicaciontareasfinal.data.IaRequest
+import com.unap.aplicaciontareasfinal.data.IaResponse
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -29,7 +31,8 @@ class IaService {
                 setBody(IaRequest(texto = texto))
             }
             if (response.status == HttpStatusCode.OK) {
-                response.bodyAsText()
+                val iaResponse = response.body<IaResponse>()
+                iaResponse.respuesta
             } else {
                 "Error: ${response.status.value} ${response.status.description}"
             }
