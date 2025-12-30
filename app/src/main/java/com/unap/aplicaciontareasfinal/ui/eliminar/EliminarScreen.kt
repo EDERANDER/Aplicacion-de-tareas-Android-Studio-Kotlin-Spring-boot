@@ -14,6 +14,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Un Composable es una funcion especial en Jetpack Compose que describe una parte de la interfaz de usuario.
+ * Compose se encarga de llamar a estas funciones para "dibujar" lo que se ve en la pantalla.
+ * La anotacion @Composable le dice al compilador de Kotlin que esta funcion es para la UI.
+ */
+
+/**
+ * Muestra una pantalla generica de confirmacion para acciones de eliminacion.
+ * Este componente es reutilizable y se puede configurar con un titulo y un mensaje especificos.
+ *
+ * @param titulo El texto que se muestra como encabezado de la pantalla.
+ * @param mensaje El texto descriptivo que explica la accion que se va a realizar.
+ * @param onConfirmar Una funcion lambda que se ejecuta cuando el usuario presiona el boton "Confirmar".
+ *                    El tipo `() -> Unit` significa que es una funcion que no recibe parametros y no devuelve nada.
+ * @param onCancelar Una funcion lambda que se ejecuta cuando el usuario presiona el boton "Cancelar".
+ */
 @Composable
 fun EliminarScreen(
     titulo: String,

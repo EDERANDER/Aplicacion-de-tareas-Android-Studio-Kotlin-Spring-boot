@@ -54,16 +54,35 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+/**
+ * La anotacion @OptIn se usa para habilitar APIs que el creador ha marcado como experimentales.
+ * En este caso, habilita componentes de Material Design 3 que aun podrian cambiar en el futuro.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Este Composable representa la pantalla para agregar una nueva tarea o editar una existente.
+ * La logica cambia dependiendo de si `taskToEdit` es nulo (modo creacion) o no (modo edicion).
+ *
+ * @param taskViewModel El ViewModel que maneja la logica de negocio para crear y actualizar tareas.
+ * @param onBack Funcion lambda que se llama para navegar hacia atras una vez que la operacion termina.
+ * @param taskToEdit Tarea opcional. Si se proporciona, la pantalla entra en modo de edicion
+ *                   y los campos se rellenan con los datos de esta tarea. Si es nulo, es modo creacion.
+ */
 @Composable
 fun AddTaskScreen(
     taskViewModel: TaskViewModel,
     onBack: () -> Unit,
     taskToEdit: Task? = null
 ) {
+    // `LocalContext.current` obtiene el contexto de Android, necesario para mostrar Toasts.
     val context = LocalContext.current
+    // `collectAsState` convierte el StateFlow del ViewModel en un State de Compose.
+    // La UI se recompone cuando el estado de la operacion (exito, error, etc.) cambia.
     val taskOperationState by taskViewModel.taskOperationState.collectAsState()
 
+    // Se usa `remember` con `mutableStateOf` para cada campo del formulario.
+    // Esto crea un estado interno para el Composable que sobrevive a las recomposiciones.
+    // Cuando el usuario escribe en un campo, el estado se actualiza y la UI se redibuja.
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
 
@@ -76,6 +95,9 @@ fun AddTaskScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
+    // `LaunchedEffect` se usa para efectos secundarios que deben ocurrir en respuesta a un cambio de estado.
+    // Este efecto se ejecuta una vez si `taskToEdit` no es nulo.
+    // Se usa para rellenar los campos del formulario con los datos de la tarea a editar.
     LaunchedEffect(taskToEdit) {
         taskToEdit?.let {
             title = it.titulo
@@ -99,10 +121,12 @@ fun AddTaskScreen(
         }
     }
 
+    // Este efecto se ejecuta cada vez que `taskOperationState` cambia.
+    // Se usa para mostrar un mensaje (Toast) de exito o error y luego navegar hacia atras.
     LaunchedEffect(taskOperationState) {
         when (val state = taskOperationState) {
             is TaskOperationState.Success -> {
-                val message = if (taskToEdit == null) "Tarea creada con éxito" else "Tarea actualizada con éxito"
+                val message = if (taskToEdit == null) "Tarea creada con exito" else "Tarea actualizada con exito"
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 taskViewModel.resetTaskOperationState()
                 onBack()
@@ -234,7 +258,9 @@ fun AddTaskScreen(
     }
 
     if (showDatePicker) {
+        // `rememberDatePickerState` crea y recuerda el estado para el DatePicker.
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
+        // `DatePickerDialog` es un dialogo pre-construido que contiene un calendario para seleccionar una fecha.
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -254,6 +280,12 @@ fun AddTaskScreen(
 }
 
 
+/**
+ * Un Composable de ayuda que envuelve a su contenido en una tarjeta con fondo y bordes redondeados,
+ * similar a una burbuja de chat.
+ *
+ * @param content El Composable que se mostrara dentro de la tarjeta.
+ */
 @Composable
 fun BubbleCard(content: @Composable () -> Unit) {
     Box(
@@ -267,7 +299,16 @@ fun BubbleCard(content: @Composable () -> Unit) {
     }
 }
 
-// Adding this function back to satisfy the compiler, even if it's not used by AddTaskScreen
+/**
+ * Este Composable parece ser un remanente de una version anterior o un componente no utilizado.
+ * Se define aqui pero su cuerpo esta vacio, por lo que no dibuja nada en la pantalla.
+ *
+ * @param modifier Modificador de Compose.
+ * @param title Titulo para la burbuja.
+ * @param date Fecha para la burbuja.
+ * @param isSelected Indica si esta seleccionada.
+ * @param onClick Accion a ejecutar al pulsar.
+ */
 @Composable
 fun DateBubble(
     modifier: Modifier = Modifier,
@@ -276,5 +317,5 @@ fun DateBubble(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    // Empty on purpose
+    // Vacio a proposito.
 }

@@ -25,15 +25,36 @@ import androidx.compose.ui.unit.sp
 import com.unap.aplicaciontareasfinal.R
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 
+/**
+ * Una `Activity` es un componente principal de una aplicacion de Android que representa una unica pantalla
+ * con la que un usuario puede interactuar. `ComponentActivity` es la clase base para actividades que usan Jetpack Compose.
+ *
+ * Esta `WelcomeActivity` es la pantalla de bienvenida que se muestra al iniciar la aplicacion por primera vez.
+ */
 class WelcomeActivity : ComponentActivity() {
+    /**
+     * El metodo `onCreate` se llama cuando la actividad se esta iniciando.
+     * Es donde se debe realizar la mayor parte de la inicializacion.
+     *
+     * @param savedInstanceState Si la actividad se esta re-creando despues de haber sido destruida
+     *                           (por ejemplo, al rotar la pantalla), este Bundle contiene el estado mas reciente.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // `setContent` es la funcion principal de Compose en una actividad.
+        // Define la interfaz de usuario de la actividad utilizando funciones Composable.
         setContent {
+            // `AplicacionTareasFinalTheme` es un Composable que define el tema de la aplicacion
+            // (colores, tipografias, formas) para todos los Composables hijos.
             AplicacionTareasFinalTheme {
                 WelcomeScreen(
                     onStartClick = {
+                        // Un `Intent` es un objeto de mensajeria que puedes usar para solicitar una accion
+                        // de otro componente de la aplicacion. En este caso, se usa para iniciar una nueva actividad.
                         val intent = Intent(this, TermsActivity::class.java)
                         startActivity(intent)
+                        // `finish()` cierra la actividad actual para que el usuario no pueda volver a ella
+                        // presionando el boton "atras".
                         finish()
                     }
                 )
@@ -42,8 +63,15 @@ class WelcomeActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Este es el Composable que define la apariencia visual de la pantalla de bienvenida.
+ * Es una funcion sin estado propio (stateless) que solo muestra informacion y reacciona a los clics.
+ *
+ * @param onStartClick Una funcion lambda que se ejecuta cuando el usuario presiona el boton "Comenzar".
+ */
 @Composable
 fun WelcomeScreen(onStartClick: () -> Unit) {
+    // `Box` es un contenedor que permite apilar elementos uno encima de otro.
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo con imagen y gradiente
         Image(
@@ -103,7 +131,7 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
             )
-            
+
              Text(
                 text = "Tu asistente personal para el éxito académico y profesional.",
                 fontSize = 16.sp,

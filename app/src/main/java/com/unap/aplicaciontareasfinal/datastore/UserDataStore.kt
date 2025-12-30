@@ -12,12 +12,31 @@ import com.unap.aplicaciontareasfinal.data.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+// Esta es una propiedad de extension para `Context` que crea y gestiona
+// una instancia de `DataStore<Preferences>` para las preferencias del usuario.
+// `preferencesDataStore` es la forma recomendada de obtener una instancia de DataStore.
+// El nombre "user_prefs" es el nombre del archivo donde se guardaran las preferencias.
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
 
+/**
+ * Esta clase se encarga de almacenar y recuperar las preferencias del usuario localmente
+ * utilizando Jetpack DataStore.
+ *
+ * `Jetpack DataStore` es la solucion de Google para el almacenamiento de datos pequeños y simples,
+ * ofreciendo un enfoque asincrono y basado en `Flow` que es mas seguro y robusto que `SharedPreferences`.
+ *
+ * @param context El contexto de la aplicacion, necesario para inicializar DataStore.
+ */
 class UserDataStore(context: Context) {
 
     private val dataStore = context.dataStore
 
+    /**
+     * `companion object` en Kotlin se usa para declarar miembros estaticos.
+     * Aqui se definen las "keys" (claves) que se usan para almacenar y recuperar valores en DataStore.
+     * Cada clave esta tipada (`intPreferencesKey`, `stringPreferencesKey`, etc.) para asegurar
+     * que los datos se guarden y recuperen con el tipo correcto.
+     */
     companion object {
         val USER_ID = intPreferencesKey("user_id")
         val USER_NAME = stringPreferencesKey("user_name")
@@ -27,6 +46,14 @@ class UserDataStore(context: Context) {
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
     }
 
+    /**
+     * Guarda la informacion completa de un objeto `User` en DataStore.
+     *
+     * `dataStore.edit { preferences -> ... }` es la forma transaccional y asincrona de modificar
+     * los datos en DataStore. El bloque `edit` garantiza la atomicidad de la operacion.
+     *
+     * @param user El objeto `User` a guardar.
+     */
     suspend fun saveUser(user: User) {
         dataStore.edit { preferences ->
             preferences[USER_ID] = user.id
@@ -37,6 +64,14 @@ class UserDataStore(context: Context) {
         }
     }
 
+    /**
+     * Expone un `Flow` de Kotlin que emite el `User` actualmente guardado.
+     *
+     * Un `Flow` es una secuencia asincrona de valores. Permite a los observadores
+     * reaccionar a los cambios de datos en tiempo real.
+     *
+     * @return Un `Flow<User?>` que emite el objeto `User` guardado, o `null` si no hay usuario.
+     */
     val getUser: Flow<User?> = dataStore.data.map { preferences ->
         val id = preferences[USER_ID]
         val name = preferences[USER_NAME]
@@ -51,16 +86,28 @@ class UserDataStore(context: Context) {
         }
     }
 
+    /**
+     * Guarda una preferencia booleana indicando si el usuario ya ha visto la pantalla de bienvenida/onboarding.
+     *
+     * @param hasSeen `true` si ya la ha visto, `false` en caso contrario.
+     */
     suspend fun setHasSeenOnboarding(hasSeen: Boolean) {
         dataStore.edit { preferences ->
             preferences[HAS_SEEN_ONBOARDING] = hasSeen
         }
     }
 
+    /**
+     * Expone un `Flow` que emite el estado de si el usuario ha visto la pantalla de bienvenida.
+     * @return Un `Flow<Boolean>` que emite `true` si ha visto el onboarding, `false` en caso contrario.
+     */
     val hasSeenOnboarding: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[HAS_SEEN_ONBOARDING] ?: false
     }
 
+    /**
+     * Elimina todos los datos del usuario guardados en DataStore, efectivamente "cerrando la sesion" localmente.
+     */
     suspend fun clearData() {
         dataStore.edit { preferences ->
             preferences.remove(USER_ID)

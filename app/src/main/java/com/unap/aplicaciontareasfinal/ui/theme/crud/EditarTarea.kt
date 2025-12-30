@@ -21,11 +21,30 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * NOTA: Este componente parece ser una version anterior o una pantalla de edicion de tareas no utilizada.
+ * La logica de edicion principal de la aplicacion se encuentra actualmente en `AddTaskScreen` cuando se le
+ * pasa un parametro `taskToEdit`. Este archivo podria ser obsoleto.
+ */
+
+/**
+ * La anotacion @OptIn se usa para habilitar APIs que el creador ha marcado como experimentales.
+ * En este caso, habilita componentes de Material Design 3.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Un Composable que representa una pantalla para editar una tarea.
+ * Utiliza estados locales para manejar los campos del formulario y muestra dialogos de seleccion de fecha.
+ *
+ * @param onBack Funcion lambda que se llama para navegar hacia atras.
+ */
 @Composable
 fun EditTaskScreen(onBack: () -> Unit) {
 
+    // `remember` se usa para mantener objetos en memoria a traves de las recomposiciones.
+    // `SnackbarHostState` controla la visualizacion de mensajes emergentes (Snackbars).
     val snackbarHostState = remember { SnackbarHostState() }
+    // `rememberCoroutineScope` obtiene un ambito de corrutina para lanzar corrutinas desde callbacks (ej. onClick).
     val scope = rememberCoroutineScope()
 
     val formatter = remember {
@@ -33,6 +52,8 @@ fun EditTaskScreen(onBack: () -> Unit) {
     }
 
     /* 🔹 Datos existentes de la tarea */
+    // `remember` con `mutableStateOf` crea un estado observable que, al cambiar, recompone la UI.
+    // Aqui se usan para almacenar los valores de los campos del formulario, con datos de ejemplo.
     var title by remember {
         mutableStateOf("Desarrollo de plataformas")
     }
@@ -61,6 +82,7 @@ fun EditTaskScreen(onBack: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
+        // Scaffold proporciona la estructura basica de la pantalla.
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
@@ -82,6 +104,7 @@ fun EditTaskScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
+                // Se usa para agrupar visualmente los campos del formulario.
                 BubbleCard {
                     OutlinedTextField(
                         value = title,
@@ -129,6 +152,8 @@ fun EditTaskScreen(onBack: () -> Unit) {
 
                 Button(
                     onClick = {
+                        // `scope.launch` inicia una corrutina para realizar operaciones asincronas,
+                        // como mostrar un Snackbar, sin bloquear el hilo principal de la UI.
                         scope.launch {
                             when {
                                 title.isBlank() ->
@@ -191,6 +216,15 @@ fun EditTaskScreen(onBack: () -> Unit) {
         ) { DatePicker(state = state) }
     }
 }
+
+/**
+ * Funcion de utilidad para formatear de forma segura una fecha a partir de milisegundos.
+ * Devuelve "Fecha invalida" si ocurre un error.
+ *
+ * @param millis Los milisegundos a formatear.
+ * @param formatter El `SimpleDateFormat` a utilizar.
+ * @return La fecha formateada como String.
+ */
 fun formatDateSafe(
     millis: Long,
     formatter: SimpleDateFormat

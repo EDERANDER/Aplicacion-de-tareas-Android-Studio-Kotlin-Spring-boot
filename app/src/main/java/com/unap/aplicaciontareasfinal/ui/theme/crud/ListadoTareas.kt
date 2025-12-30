@@ -39,7 +39,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.*
 import androidx.compose.ui.platform.LocalContext
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * La anotacion @OptIn se usa para habilitar APIs experimentales.
+ * - `ExperimentalMaterial3Api`: Para componentes de Material Design 3.
+ * - `ExperimentalAnimationApi`: Para APIs de animacion como `AnimatedVisibility`.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+/**
+ * Este es el Composable para la pantalla principal que muestra la lista de tareas del usuario.
+ *
+ * @param onLogoutClicked Funcion lambda que se ejecuta cuando el usuario pulsa el boton de cerrar sesion.
+ * @param onAddTaskClicked Funcion lambda que se ejecuta para navegar a la pantalla de añadir tarea.
+ * @param onEditTaskClicked Funcion lambda que se ejecuta para navegar a la pantalla de edicion, pasando la tarea a editar.
+ * @param taskViewModel La instancia del ViewModel que gestiona la logica y el estado de las tareas.
+ */
 @Composable
 fun TaskScreen(
     onLogoutClicked: () -> Unit,
@@ -47,23 +60,34 @@ fun TaskScreen(
     onEditTaskClicked: (Task) -> Unit,
     taskViewModel: TaskViewModel
 ) {
+    // `remember` se usa para mantener el estado a traves de las recomposiciones.
+    // `SnackbarHostState` controla la visualizacion de Snackbars (mensajes emergentes).
     val snackbarHostState = remember { SnackbarHostState() }
+    // `rememberCoroutineScope` obtiene un ambito de corrutina ligado al ciclo de vida del Composable,
+    // usado aqui para lanzar la corrutina que muestra el Snackbar.
     val scope = rememberCoroutineScope()
 
+    // `mutableStateOf` crea un estado observable. `searchText` almacena el texto de busqueda actual.
     var searchText by remember { mutableStateOf(TextFieldValue("")) }
 
+    // `collectAsState` convierte un StateFlow del ViewModel en un State de Compose.
+    // La UI se recompone automaticamente cuando estos valores cambian.
     val tasks by taskViewModel.tasks.collectAsState()
     val loading by taskViewModel.loading.collectAsState()
     val error by taskViewModel.error.collectAsState()
 
+    // Estados locales para controlar la visibilidad de los dialogos.
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     var taskToShowDetails by remember { mutableStateOf<Task?>(null) }
 
+    // `LaunchedEffect(Unit)` ejecuta el bloque de corrutina una sola vez, cuando el Composable
+    // se muestra por primera vez. Es ideal para cargar datos iniciales.
     LaunchedEffect(Unit) {
         taskViewModel.loadTasks()
     }
 
-    // Show snackbar for errors
+    // Este efecto se ejecuta cada vez que el valor de `error` cambia.
+    // Se usa para mostrar un Snackbar cuando ocurre un error.
     LaunchedEffect(error) {
         error?.let {
             scope.launch {
@@ -72,27 +96,25 @@ fun TaskScreen(
                     actionLabel = "Dismiss",
                     duration = SnackbarDuration.Short
                 )
-                taskViewModel.clearError()
+                taskViewModel.clearError() // Limpia el error para no mostrarlo de nuevo.
             }
         }
     }
 
-    // 🔹 CONTENEDOR CON FONDO
+    // `Box` es un contenedor basico que permite apilar elementos uno encima de otro.
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // 🔹 IMAGEN DE FONDO
         Image(
             painter = painterResource(id = R.drawable.fondo_tareas),
             contentDescription = "Fondo tareas",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        // `SnackbarHost` es el componente que efectivamente muestra los Snackbars en la pantalla.
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // 🔹 CONTENIDO
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -134,7 +156,9 @@ fun TaskScreen(
             } else if (tasks.isEmpty()) {
                 Text("No hay tareas para mostrar.", modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
+                // `LazyColumn` es para mostrar listas de forma eficiente.
                 LazyColumn {
+                    // `items` es el constructor para los elementos de la lista.
                     items(tasks) { task ->
                         TaskItem(
                             task = task,
@@ -151,6 +175,8 @@ fun TaskScreen(
         }
     }
 
+    // Estos bloques `if` y `let` controlan la aparicion de los dialogos.
+    // Cuando `taskToDelete` o `taskToShowDetails` no son nulos, el dialogo correspondiente se muestra.
     if (taskToDelete != null) {
         Box(
             modifier = Modifier
@@ -183,6 +209,15 @@ fun TaskScreen(
     }
 }
 
+/**
+ * Representa un unico elemento (item) en la lista de tareas.
+ *
+ * @param task La tarea a mostrar.
+ * @param onTaskCheckedChange Funcion que se llama cuando el estado del checkbox cambia.
+ * @param onEditTaskClicked Funcion que se llama al pulsar el boton de editar.
+ * @param onDeleteClicked Funcion que se llama al pulsar el boton de eliminar.
+ * @param onItemClicked Funcion que se llama al pulsar sobre el item para ver detalles.
+ */
 @Composable
 fun TaskItem(
     task: Task,
@@ -245,7 +280,8 @@ fun TaskItem(
                 }
             }
 
-            // 🔹 TEXTO "TAREA ENTREGADA"
+            // `AnimatedVisibility` es un Composable que anima la aparicion y desaparicion de su contenido
+            // basado en una condicion booleana.
             AnimatedVisibility(
                 visible = task.estado,
                 enter = fadeIn() + expandVertically(),
@@ -263,11 +299,18 @@ fun TaskItem(
     }
 }
 
+/**
+ * Un dialogo que muestra los detalles completos de una tarea.
+ *
+ * @param task La tarea cuyos detalles se van a mostrar.
+ * @param onDismiss Funcion que se llama para cerrar el dialogo.
+ */
 @Composable
 fun TaskDetailsDialog(
     task: Task,
     onDismiss: () -> Unit
 ) {
+    // `Dialog` es un Composable que muestra contenido en una ventana emergente.
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -387,6 +430,9 @@ fun TaskDetailsDialog(
     }
 }
 
+/**
+ * Un dialogo de confirmacion de eliminacion con animaciones.
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun DeleteConfirmationDialog(
@@ -400,6 +446,7 @@ fun DeleteConfirmationDialog(
         enter = scaleIn(initialScale = 0.8f) + fadeIn(),
         exit = scaleOut(targetScale = 0.8f) + fadeOut()
     ) {
+        // `AlertDialog` es un Composable estandar para dialogos de alerta.
         AlertDialog(
             onDismissRequest = onDismiss,
             shape = RoundedCornerShape(24.dp),
@@ -449,6 +496,10 @@ fun DeleteConfirmationDialog(
     }
 }
 
+/**
+ * La anotacion `@Preview` permite ver una vista previa de este Composable en el editor de Android Studio
+ * sin necesidad de ejecutar la aplicacion en un emulador o dispositivo.
+ */
 @Preview(showBackground = true)
 @Composable
 fun PreviewTaskScreen() {

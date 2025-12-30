@@ -41,9 +41,16 @@ import com.unap.aplicaciontareasfinal.viewmodel.RegisterViewModel
 import com.unap.aplicaciontareasfinal.viewmodel.RegisterViewModelFactory
 import kotlinx.coroutines.launch
 
+/**
+ * Actividad que maneja la pantalla y la logica para registrar un nuevo usuario.
+ */
 class RegisterActivity : ComponentActivity() {
 
+    // Se inicializa el servicio de usuario de forma "perezosa" (lazy).
     private val userService by lazy { UserService() }
+    // Se obtiene la instancia del ViewModel usando la delegacion `by viewModels`.
+    // Se le pasa una factoria personalizada (`RegisterViewModelFactory`) porque `RegisterViewModel`
+    // tiene dependencias (en este caso, `userService`) que necesitan ser inyectadas.
     private val viewModel: RegisterViewModel by viewModels {
         RegisterViewModelFactory(userService)
     }
@@ -55,6 +62,7 @@ class RegisterActivity : ComponentActivity() {
                 RegisterScreen(
                     registerViewModel = viewModel,
                     onBackToLoginClick = {
+                        // Navega de vuelta a la pantalla de Login y cierra esta.
                         startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
@@ -64,20 +72,35 @@ class RegisterActivity : ComponentActivity() {
     }
 }
 
+/**
+ * La anotacion @OptIn se usa para habilitar APIs experimentales.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * El Composable que define la interfaz de usuario para la pantalla de registro.
+ *
+ * @param registerViewModel El ViewModel que maneja la logica de registro.
+ * @param onBackToLoginClick Funcion lambda que se ejecuta al pulsar el enlace para volver a la pantalla de inicio de sesion.
+ */
 @Composable
 fun RegisterScreen(registerViewModel: RegisterViewModel, onBackToLoginClick: () -> Unit) {
+    // Se usa `remember` y `mutableStateOf` para crear y recordar el estado de cada campo del formulario.
+    // Cuando el usuario escribe, el estado cambia y la UI se recompone para mostrar el nuevo texto.
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var whatsapp by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    // Este estado booleano controla si la contrasena se muestra como texto o como puntos.
     var passwordVisible by remember { mutableStateOf(false) }
 
+    // `collectAsState` convierte el StateFlow del ViewModel en un State de Compose.
     val registerState by registerViewModel.registerState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    // Este `LaunchedEffect` se ejecuta cada vez que el `registerState` cambia.
+    // Se usa para reaccionar al resultado de la operacion de registro (exito o error).
     LaunchedEffect(registerState) {
         when (registerState) {
             is RegisterState.Success -> {
@@ -86,17 +109,19 @@ fun RegisterScreen(registerViewModel: RegisterViewModel, onBackToLoginClick: () 
                         "Registration successful! Please login."
                     )
                 }
+                // Si el registro es exitoso, navega a la pantalla de Login.
                 context.startActivity(Intent(context, LoginActivity::class.java))
                 (context as? ComponentActivity)?.finish()
             }
             is RegisterState.Error -> {
+                // Si hay un error, muestra el mensaje en un Snackbar.
                 scope.launch {
                     snackbarHostState.showSnackbar(
                         (registerState as RegisterState.Error).message
                     )
                 }
             }
-            else -> {}
+            else -> {} // No hacer nada para otros estados como Idle o Loading.
         }
     }
 
@@ -238,6 +263,9 @@ fun RegisterScreen(registerViewModel: RegisterViewModel, onBackToLoginClick: () 
                     }
                 },
                 singleLine = true,
+                // `visualTransformation` cambia la apariencia del texto.
+                // `PasswordVisualTransformation` lo reemplaza con puntos.
+                // Se cambia a `VisualTransformation.None` para mostrar el texto.
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),

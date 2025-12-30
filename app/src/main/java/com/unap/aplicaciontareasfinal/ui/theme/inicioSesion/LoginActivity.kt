@@ -38,8 +38,15 @@ import com.unap.aplicaciontareasfinal.viewmodel.LoginViewModel
 import com.unap.aplicaciontareasfinal.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
 
+/**
+ * Actividad que maneja la pantalla y la logica para el inicio de sesion de un usuario.
+ */
 class LoginActivity : ComponentActivity() {
 
+    // `by viewModels` es un delegado de propiedad de Kotlin que proporciona una instancia de ViewModel.
+    // El ViewModel sobrevive a cambios de configuracion como la rotacion de pantalla.
+    // Se le pasa la factoria singleton `ViewModelFactory` para que sepa como crear el LoginViewModel
+    // con sus dependencias (UserService, UserDataStore).
     private val viewModel: LoginViewModel by viewModels {
         ViewModelFactory.getInstance(applicationContext)
     }
@@ -51,6 +58,7 @@ class LoginActivity : ComponentActivity() {
                 LoginScreen(
                     loginViewModel = viewModel,
                     onRegisterClick = {
+                        // Navega a la pantalla de registro cuando el usuario pulsa el enlace.
                         startActivity(Intent(this, RegisterActivity::class.java))
                     }
                 )
@@ -59,31 +67,48 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
+/**
+ * La anotacion @OptIn se usa para habilitar APIs experimentales.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * El Composable que define la interfaz de usuario para la pantalla de inicio de sesion.
+ *
+ * @param loginViewModel El ViewModel que maneja la logica de inicio de sesion.
+ * @param onRegisterClick Funcion lambda que se ejecuta cuando el usuario pulsa el enlace para registrarse.
+ */
 @Composable
 fun LoginScreen(loginViewModel: LoginViewModel, onRegisterClick: () -> Unit) {
+    // Estados para los campos de texto y la visibilidad de la contrasena.
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // `collectAsState` observa el `loginState` del ViewModel. La UI se recompone cuando cambia.
     val loginState by loginViewModel.loginState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    // `LaunchedEffect` se ejecuta cuando `loginState` cambia.
+    // Se usa para reaccionar al resultado del intento de inicio de sesion.
     LaunchedEffect(loginState) {
         when (loginState) {
             is LoginState.Success -> {
+                // Si el login es exitoso, navega a la actividad principal de la aplicacion.
                 context.startActivity(Intent(context, MainActivity::class.java))
+                // Se finaliza la actividad actual para que el usuario no pueda volver atras.
                 (context as? ComponentActivity)?.finish()
             }
             is LoginState.Error -> {
+                // Si hay un error, se muestra en un Snackbar.
                 scope.launch {
                     snackbarHostState.showSnackbar(
                         (loginState as LoginState.Error).message
                     )
                 }
             }
-            else -> {}
+            else -> {} // No hacer nada en otros estados (Idle, Loading).
         }
     }
 
@@ -184,6 +209,8 @@ fun LoginScreen(loginViewModel: LoginViewModel, onRegisterClick: () -> Unit) {
                     }
                 },
                 singleLine = true,
+                // `visualTransformation` se usa para cambiar la apariencia del texto.
+                // Se alterna entre `PasswordVisualTransformation` (oculta el texto) y `VisualTransformation.None` (lo muestra).
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -236,6 +263,7 @@ fun LoginScreen(loginViewModel: LoginViewModel, onRegisterClick: () -> Unit) {
                 )
             }
         }
+        // `SnackbarHost` es el componente que se encarga de mostrar los mensajes de `snackbarHostState`.
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)

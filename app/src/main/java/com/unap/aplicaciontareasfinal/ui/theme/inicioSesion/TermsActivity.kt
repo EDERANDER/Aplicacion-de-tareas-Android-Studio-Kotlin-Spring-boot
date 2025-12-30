@@ -30,18 +30,34 @@ import com.unap.aplicaciontareasfinal.datastore.UserDataStore
 import com.unap.aplicaciontareasfinal.ui.theme.AplicacionTareasFinalTheme
 import kotlinx.coroutines.launch
 
+/**
+ * Esta Actividad muestra los terminos y condiciones de la aplicacion.
+ * El usuario debe aceptarlos para poder continuar.
+ */
 class TermsActivity : ComponentActivity() {
 
+    // `by lazy` es un delegado de propiedad de Kotlin. El objeto `UserDataStore` solo se
+    // inicializara la primera vez que se acceda a el, no cuando se crea la Actividad.
+    // Es una forma de optimizar la inicializacion de objetos pesados.
     private val userDataStore by lazy { UserDataStore(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            // `rememberCoroutineScope` obtiene un ambito de corrutina que esta ligado al ciclo de vida
+            // del Composable. Se usa para lanzar corrutinas en respuesta a eventos de la UI.
             val scope = rememberCoroutineScope()
             AplicacionTareasFinalTheme {
                 TermsScreen(onAccept = {
+                    // Se lanza una corrutina para realizar una operacion de guardado en segundo plano
+                    // sin bloquear el hilo principal de la UI.
                     scope.launch {
+                        // Se guarda en `UserDataStore` que el usuario ya ha visto esta pantalla.
+                        // `DataStore` es la solucion moderna de Android para guardar pequeñas cantidades
+                        // de datos de forma asincrona, reemplazando a `SharedPreferences`.
                         userDataStore.setHasSeenOnboarding(true)
+
+                        // Navega a la pantalla de Login y cierra esta.
                         startActivity(Intent(this@TermsActivity, LoginActivity::class.java))
                         finish()
                     }
@@ -51,8 +67,15 @@ class TermsActivity : ComponentActivity() {
     }
 }
 
+/**
+ * El Composable que muestra el contenido de la pantalla de terminos y condiciones.
+ *
+ * @param onAccept Funcion lambda que se ejecuta cuando el usuario pulsa el boton "Aceptar".
+ */
 @Composable
 fun TermsScreen(onAccept: () -> Unit) {
+    // `rememberScrollState` crea y recuerda el estado de scroll para un `Column` o `Row`
+    // que use el modificador `verticalScroll` o `horizontalScroll`.
     val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -77,6 +100,8 @@ fun TermsScreen(onAccept: () -> Unit) {
                 )
         )
 
+        // El modificador `verticalScroll` hace que el contenido de la columna sea desplazable
+        // si es mas grande que la pantalla. Requiere un `ScrollState`.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -147,12 +172,16 @@ fun TermsScreen(onAccept: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
+/**
+ * Composable de ayuda para mostrar un titulo de seccion.
+ * @param title El texto del titulo.
+ */
 @Composable
 fun SectionTitle(title: String) {
     Text(
@@ -164,6 +193,10 @@ fun SectionTitle(title: String) {
     )
 }
 
+/**
+ * Composable de ayuda para mostrar un parrafo de texto de una seccion.
+ * @param text El texto del parrafo.
+ */
 @Composable
 fun SectionText(text: String) {
     Text(
