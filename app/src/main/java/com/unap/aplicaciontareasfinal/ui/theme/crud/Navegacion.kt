@@ -1,8 +1,6 @@
 import com.unap.aplicaciontareasfinal.data.Task
 import com.unap.aplicaciontareasfinal.ui.theme.crud.AddTaskScreen
 import com.unap.aplicaciontareasfinal.ui.theme.crud.IaChatScreen
-import com.unap.aplicaciontareasfinal.ui.theme.crud.IaIntroScreen
-import com.unap.aplicaciontareasfinal.ui.theme.crud.IaLoadingScreen
 import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.layout.Column
@@ -34,8 +32,6 @@ sealed class Screen {
     object TaskList : Screen()
     object AddTask : Screen()
     data class EditTask(val task: Task) : Screen()
-    object IaLoading : Screen()
-    object IaIntro : Screen()
     object IaChat : Screen()
     object Profile : Screen()
 }
@@ -69,8 +65,8 @@ fun AppNavigation(viewModel: TaskViewModel) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.AutoAwesome, contentDescription = "IA") },
                     label = { Text("IA") },
-                    selected = currentScreen.value is Screen.IaLoading || currentScreen.value is Screen.IaIntro || currentScreen.value is Screen.IaChat,
-                    onClick = { currentScreen.value = Screen.IaLoading }
+                    selected = currentScreen.value is Screen.IaChat,
+                    onClick = { currentScreen.value = Screen.IaChat }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
@@ -105,18 +101,10 @@ fun AppNavigation(viewModel: TaskViewModel) {
                         taskToEdit = taskToEdit
                     )
                 }
-
-                is Screen.IaLoading -> IaLoadingScreen(onTimeout = {
-                    currentScreen.value = Screen.IaIntro
-                })
-
-                is Screen.IaIntro -> IaIntroScreen(onStartChat = {
-                    currentScreen.value = Screen.IaChat
-                })
-
                 is Screen.IaChat -> IaChatScreen()
                 is Screen.Profile -> ProfileScreen(onLogoutClicked = { viewModel.logout() })
             }
         }
     }
 }
+
